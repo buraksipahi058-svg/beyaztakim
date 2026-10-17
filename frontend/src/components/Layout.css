@@ -1,0 +1,149 @@
+.layout {
+  --sidebar-width: 260px;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  grid-template-rows: var(--topbar-height) 1fr;
+  grid-template-areas:
+    'topbar topbar'
+    'sidebar content';
+  transition: grid-template-columns 0.2s ease;
+}
+
+.layout--collapsed {
+  --sidebar-width: 72px;
+}
+
+.topbar {
+  grid-area: topbar;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  color: var(--text-muted);
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: var(--hover);
+}
+
+.sidebar {
+  grid-area: sidebar;
+  position: sticky;
+  top: var(--topbar-height);
+  align-self: start;
+  padding-top: 8px;
+  overflow: hidden;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  height: 48px;
+  padding: 0 24px;
+  margin-right: 12px;
+  border-radius: 0 24px 24px 0;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.nav-item:hover {
+  background: var(--hover);
+}
+
+.nav-item--active,
+.nav-item--active:hover {
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.layout--collapsed .nav-item {
+  margin: 0 12px;
+  padding: 0 13px;
+  border-radius: 24px;
+}
+
+.layout--collapsed .nav-item__label {
+  display: none;
+}
+
+.content {
+  grid-area: content;
+  min-width: 0;
+  padding: 24px 32px 48px;
+}
+
+.api-status {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.api-status__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.api-status--online .api-status__dot {
+  background: #1e8e3e;
+}
+
+.api-status--offline .api-status__dot {
+  background: #d93025;
+}
+
+@media (max-width: 720px) {
+  .layout,
+  .layout--collapsed {
+    --sidebar-width: 64px;
+  }
+
+  .nav-item,
+  .layout--collapsed .nav-item {
+    margin: 0 8px;
+    padding: 0 12px;
+    border-radius: 24px;
+  }
+
+  .nav-item__label,
+  .brand__name,
+  .api-status__label {
+    display: none;
+  }
+
+  .content {
+    padding: 16px;
+  }
+}

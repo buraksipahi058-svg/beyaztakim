@@ -1,0 +1,96 @@
+:root {
+  --topbar-height: 64px;
+  --surface: #ffffff;
+  --background: #ffffff;
+  --text: #202124;
+  --text-muted: #5f6368;
+  --border: #e0e0e0;
+  --hover: #f1f3f4;
+  --accent-soft: #feefc3;
+  --shadow-hover: 0 1px 2px rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  color: var(--text);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+}
+
+button {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 2px;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.page-hint {
+  margin: 0 0 20px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.note-section + .note-section {
+  margin-top: 32px;
+}
+
+.section-title {
+  margin: 0 0 12px 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  margin-top: 12vh;
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+.empty-state__icon {
+  opacity: 0.25;
+}
+
+.not-found {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}

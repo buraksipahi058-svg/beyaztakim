@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Veritabanı
+*.db
+*.sqlite
+*.sqlite3
+
+# Ortam değişkenleri (yalnızca .env.example commit edilir)
+.env
+.env.*
+!.env.example
+
+# Node / frontend
+node_modules/
+dist/
+*.log
+
+# Coverage
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+coverage/
+.nyc_output/
+
+# Sonar
+.scannerwork/
+
+# IDE ve işletim sistemi
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
