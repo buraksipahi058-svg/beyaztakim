@@ -1,8 +1,7 @@
-"""Pydantic şemaları (API girdi/çıktı biçimleri).
+"""Ortak Pydantic şemaları: modellerin okuma (çıktı) biçimleri.
 
-Burada yalnızca modellerin okuma (çıktı) şemaları vardır. Özellik sahipleri
-kendi Create/Update şemalarını bu dosyaya, docs/fonksiyonlar.md'deki
-isimlerle ekler.
+Ortak dosyadır. Özellik sahipleri kendi girdi şemalarını (ör. NoteCreate)
+buraya değil, kendi dosyalarına yazar: app/schemas/<özellik>.py
 """
 
 from datetime import datetime

@@ -7,6 +7,10 @@
 //   export function listNotes() {
 //     return apiRequest('/notes');
 //   }
+//
+// Ortak dosyadır. Giriş bilgisinin isteklere eklenmesi authSession.js'te yapılır.
+
+import { getAuthRequestOptions, handleUnauthorized } from './authSession.js';
 
 export const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').replace(
   /\/+$/,
@@ -35,18 +39,24 @@ async function readBody(response) {
 
 export async function apiRequest(path, { method = 'GET', body, headers, ...options } = {}) {
   const hasBody = body !== undefined;
+  const { headers: authHeaders, ...authOptions } = getAuthRequestOptions();
   const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...authOptions,
+    ...options,
     method,
     headers: {
       Accept: 'application/json',
       ...(hasBody && { 'Content-Type': 'application/json' }),
+      ...authHeaders,
       ...headers,
     },
     body: hasBody ? JSON.stringify(body) : undefined,
-    ...options,
   });
 
   const data = await readBody(response);
+  if (response.status === 401) {
+    handleUnauthorized();
+  }
   if (!response.ok) {
     const message =
       typeof data?.detail === 'string' ? data.detail : `İstek başarısız oldu (${response.status})`;

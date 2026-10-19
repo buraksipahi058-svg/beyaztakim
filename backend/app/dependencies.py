@@ -8,6 +8,10 @@ Kullanım:
     def list_notes(db: DbSession, current_user: CurrentUser): ...
 
 Giriş yapan kullanıcı HER ZAMAN get_current_user üzerinden alınır.
+
+Ortak dosyadır. Tek istisna: get_current_user'ın içini gerçek giriş sistemiyle
+1. kişi (Kullanıcı ve Güvenlik) değiştirir; fonksiyonun adı ve dönüş tipi
+(User) aynı kalmalıdır.
 """
 
 from typing import Annotated

@@ -5,28 +5,31 @@ listesi türünde notlar oluşturabilecek, notları renklendirip sabitleyebilece
 etiketleyebilecek, arşivleyip çöp kutusuna taşıyabilecek ve hatırlatıcı
 kurabilecek.
 
-> **Durum:** Altyapı hazır, özellikler henüz yazılmadı. Her ekip üyesi kendi
-> özelliğini ayrı dosyalarda ekliyor. Kimin neyi yazdığı
+> **Durum:** Altyapı hazır, özellikler henüz yazılmadı. Her ekip üyesinin
+> kendi boş dosyaları ve ekranda kendine ayrılmış yerleri hazır; herkes kendi
+> özelliğini kendi branch'inde yazıp PR ile ekliyor. Kimin neyi yazdığı
 > [docs/fonksiyonlar.md](docs/fonksiyonlar.md) dosyasında takip edilir.
 
 ## Şu an ne hazır, ne değil?
 
 | Hazır (altyapı) | Henüz yok (ekip yazacak) |
 |---|---|
-| Veritabanı tabloları: kullanıcı, not, etiket, kontrol listesi maddesi | Not oluşturma, listeleme, düzenleme, silme API'si |
-| FastAPI uygulaması, `/health`, Swagger dokümanı (`/docs`) | Etiketler, kontrol listesi, renk, sabitleme |
-| Örnek veri betiği (seed): 1 kullanıcı, 4 not | Arşiv, çöp kutusu, hatırlatıcılar |
+| Veritabanı tabloları: kullanıcı, not, etiket, kontrol listesi maddesi | Not oluşturma, listeleme, düzenleme API'si |
+| FastAPI uygulaması, `/health`, Swagger dokümanı (`/docs`) | Etiketler ve arama |
+| Örnek veri betiği (seed): 1 kullanıcı, 4 not | Arşiv ve çöp kutusu |
 | Geçici "giriş yapmış kullanıcı" (`get_current_user`) | Kayıt ve giriş (gerçek kimlik doğrulama) |
-| Test altyapısı ve altyapı testleri | SonarCloud ve otomatik test (CI) bağlantısı |
+| Test altyapısı ve altyapı testleri | Liste maddeleri, hatırlatıcılar, sabitleme, renk |
 | Frontend iskeleti: sol menü, sayfa geçiş animasyonu, animasyonlu not kartları, API bağlantı göstergesi | Frontend'in gerçek verilerle çalışması |
+| Her kişinin boş dosyaları; üst çubukta, sol menüde ve not kartında kişilere ayrılmış yerler | SonarCloud ve otomatik test (CI) bağlantısı |
+| Korumalı main branch'i ve PR ile çalışma düzeni | |
 
 Uygulamayı açtığınızda göreceğiniz şeyler hakkında:
 
 - **Ana sayfadaki notlar sabit örnek veridir.** `frontend/src/api/sampleNotes.js`
   dosyasından gelir, veritabanından gelmez. Notları getiren API yazılınca bu
   dosya silinecek.
-- **Arşiv ve Çöp Kutusu sayfaları boştur.** Bu özelliklerin sahipleri
-  dolduracak.
+- **Hatırlatıcılar, Arşiv ve Çöp Kutusu sayfaları boştur.** Giriş (`/login`),
+  kayıt (`/register`) ve arama (`/search`) sayfaları da yer tutucudur.
 - **Giriş sistemi yoktur.** Backend'e gelen her istek seed'deki örnek kullanıcı
   adına yapılmış sayılır (bkz. [Mimari](#mimari)).
 
@@ -42,23 +45,26 @@ Yeni paket eklemeden önce ekibe sorun.
 
 ## Ekip
 
-| Ad Soyad | GitHub | Rol | Sorumlu olduğu özellikler |
-|---|---|---|---|
-| | | | |
-| | | | |
-| | | | |
-| | | | |
+| Ad Soyad | GitHub | Görev |
+|---|---|---|
+| | | 1. Kullanıcı ve Güvenlik |
+| | | 2. Not İşlemleri |
+| | | 3. Etiket ve Arama |
+| | | 4. Altyapı, Arşiv ve Çöp Kutusu |
+| | | 5. Liste Notları, Hatırlatıcı, Sabitleme, Renk |
 
 ## Kurulum
 
 Gerekenler: **Python 3.11+**, **Node.js 22.22+** ve npm, Git.
 Sürümleri `python --version` ve `node --version` ile kontrol edebilirsiniz.
 
+> Git'i hiç kullanmadıysanız önce [GitHub Kullanım Rehberi](docs/githubkullanım.md)'nin
+> "Bir kerelik kurulum" bölümünü okuyun.
+
 ### 1. Projeyi indirin
 
-Repo private'tır. Klonlayabilmek için repo sahibinin sizi GitHub'da
-**Settings → Collaborators** bölümünden eklemesi ve sizin daveti kabul etmeniz
-gerekir.
+Repo herkese açıktır, herkes indirebilir. Kod gönderebilmek için ise
+collaborator olarak eklenmiş olmanız ve daveti kabul etmeniz gerekir.
 
 ```bash
 git clone https://github.com/buraksipahi058-svg/beyaztakim.git
@@ -135,20 +141,29 @@ React sayfası ─► src/api/<özellik>.js ─► HTTP ─► routers/<özellik
 ```
 
 - **Router'lar** (`backend/app/routers/`) yalnızca HTTP işini yapar: girdiyi
-  alır, servisi çağırır, sonucu döndürür.
+  alır, servisi çağırır, sonucu döndürür. Her özelliğin kendi uç nokta öneki
+  vardır (`/notes`, `/tags`, `/archive` ...).
 - **Servisler** (`backend/app/services/`) iş mantığını ve veritabanı
   sorgularını içerir. FastAPI'ye bağımlı değildir, bu yüzden doğrudan test
   edilebilir.
+- **Şemalar** (`backend/app/schemas/`): `common.py` herkesin kullandığı okuma
+  şemalarıdır (`NoteRead` vb.); her özelliğin girdi şemaları kendi dosyasındadır.
 - **Giriş yapmış kullanıcı** her zaman `get_current_user` fonksiyonundan alınır
   (`backend/app/dependencies.py`). Şimdilik seed'deki örnek kullanıcıyı
   döndürür. Giriş sistemi yazıldığında yalnızca bu fonksiyonun içi değişecek,
-  onu kullanan kodlar aynı kalacak.
+  onu kullanan kodlar aynı kalacak. Frontend tarafında giriş bilgisi
+  `api/authSession.js` üzerinden her isteğe eklenir, menülü sayfalar
+  `RequireAuth` ile korunur.
 - **Otomatik ekleme:** Ortak dosyaları değiştirmeden özellik eklenebilsin diye:
-  - `backend/app/routers/` altına eklenen ve içinde `router` tanımlı her dosya
-    uygulamaya otomatik eklenir. `main.py`'ye dokunmak gerekmez.
-  - `frontend/src/pages/` altına eklenen ve `route` bilgisi olan her sayfa sol
-    menüye ve yönlendirmeye otomatik eklenir. `App.jsx` ve `Layout`'a dokunmak
-    gerekmez.
+  - `backend/app/routers/` altındaki her dosyanın `router`'ı uygulamaya
+    otomatik eklenir. `main.py`'ye dokunmak gerekmez.
+  - `frontend/src/pages/` altındaki ve `route` bilgisi olan her sayfa
+    yönlendirmeye ve (istenirse) sol menüye otomatik eklenir. `App.jsx` ve
+    `Layout`'a dokunmak gerekmez.
+- **Kişilere ayrılmış yerler:** Üst çubuk (arama, kullanıcı menüsü), sol menü
+  (etiketler) ve not kartı (etiket rozetleri, liste maddeleri, hatırlatıcı,
+  sabitleme/renk ve arşiv/çöp düğmeleri) sahiplerinin dosyalarını çağırır.
+  Liste: [AGENTS.md > Kişilere ayrılmış yerler](AGENTS.md#kişilere-ayrılmış-yerler).
 - **Hatalar:** Servisler `app/services/errors.py`'deki sınıfları fırlatır,
   bunlar otomatik olarak HTTP koduna çevrilir:
 
@@ -163,25 +178,108 @@ React sayfası ─► src/api/<özellik>.js ─► HTTP ─► routers/<özellik
 
 Tabloların ayrıntısı: [docs/veri-modeli.md](docs/veri-modeli.md).
 
+## Ekip çalışması
+
+### Kurallar
+
+- **main korumalıdır.** Kimse main'e doğrudan kod gönderemez. Her iş kendi
+  branch'inde yapılır ve Pull Request (PR) ile birleştirilir.
+- **Her PR'ı en az 1 arkadaş onaylar.** Ortak dosyalara dokunan PR'ı ayrıca
+  4. kişi onaylar (GitHub bunu otomatik ister).
+- **Herkes sadece kendi dosyalarında çalışır.** Kimin hangi dosyası olduğu ve
+  ortak dosyaların listesi: [AGENTS.md](AGENTS.md#dosya-sahipliği).
+- **Yazılan her fonksiyon** (backend ve frontend) girdisi, çıktısı ve hata
+  durumlarıyla birlikte aynı PR'da [docs/fonksiyonlar.md](docs/fonksiyonlar.md)'ye eklenir.
+- PR'lar **"Squash and merge"** ile birleştirilir.
+
+Git ve GitHub'ı adım adım (kurulum, branch açma, PR, inceleme, birleştirme,
+çakışma çözme) anlatan rehber: **[docs/githubkullanım.md](docs/githubkullanım.md)**
+
+### Branch adı
+
+```
+<tür>/<kısa-açıklama>
+```
+
+| Tür | Ne zaman? |
+|---|---|
+| `feature` | Yeni özellik |
+| `fix` | Hata düzeltme |
+| `docs` | Sadece doküman |
+| `test` | Sadece test |
+| `refactor` | Davranışı değiştirmeden kodu düzenleme |
+| `chore` | Altyapı, ayar, paket işleri |
+
+Küçük harf, kelimeler arasında tire, Türkçe karakter yok, 2-4 kelime.
+Örnekler: `feature/arsiv-servisi`, `feature/giris-ekrani`, `fix/etiket-silme-hatasi`
+
+### Commit mesajı ve PR başlığı
+
+```
+<tür>(<kapsam>): <ne yapıldı>
+```
+
+| Parça | Değerler |
+|---|---|
+| tür | `feat` (yeni özellik), `fix`, `docs`, `test`, `refactor`, `chore` |
+| kapsam | `auth`, `notes`, `tags`, `search`, `archive`, `trash`, `checklist`, `reminders`, `pin-color`, `infra` (ortak dosyalar) |
+| ne yapıldı | Türkçe, küçük harfle başlar, sonda nokta yok, en fazla 72 karakter |
+
+Örnekler:
+
+```
+feat(archive): notu arşivleme ve arşivden çıkarma eklendi
+fix(tags): aynı isimde etiket oluşturulabilmesi düzeltildi
+test(notes): not listeleme testleri eklendi
+```
+
+PR başlığı da aynı biçimde yazılır; main'e o başlıkla girer.
+
 ## Geliştirme akışı
 
 Yeni bir özellik eklerken:
 
-1. `docs/fonksiyonlar.md`'de ilgili bölüme fonksiyonunuzu şablona göre yazın
-   (sorumlu kişi, ne yaptığı, girdi, çıktı, hata durumları).
-2. Gerekiyorsa `backend/app/schemas.py`'ye girdi/çıktı şemalarını ekleyin.
-3. İş mantığını `backend/app/services/<özellik>.py` içine yazın.
-4. Uç noktayı `backend/app/routers/<özellik>.py` içine yazın.
-5. Testini `backend/tests/test_<özellik>.py` içine yazın ve `pytest`'in
-   hatasız geçtiğini görün.
-6. Frontend tarafında backend çağrılarını `frontend/src/api/<özellik>.js`,
-   sayfayı `frontend/src/pages/<Ad>Page.jsx` içine yazın.
-
-Ortak dosyalara (`main.py`, `models.py`, `dependencies.py`, `App.jsx`,
-`Layout`) dokunmanız gerekiyorsa önce ekibe haber verin.
+1. main'i güncelleyip kendi branch'ini aç (ör. `feature/arsiv-servisi`).
+2. `docs/fonksiyonlar.md`'de kendi bölümüne fonksiyonunu yaz (ne yaptığı,
+   girdi, çıktı, hata durumları).
+3. Gerekiyorsa girdi/çıktı şemalarını kendi dosyana ekle
+   (`backend/app/schemas/<özellik>.py`).
+4. İş mantığını `backend/app/services/<özellik>.py` içine yaz.
+5. Uç noktayı `backend/app/routers/<özellik>.py` içine yaz.
+6. Testini `backend/tests/test_<özellik>.py` içine yaz ve `pytest`'in
+   hatasız geçtiğini gör.
+7. Frontend'de backend çağrılarını `frontend/src/api/<özellik>.js`, ekranı
+   kendi sayfana ya da sana ayrılmış yere yaz; `npm run dev` ile dene.
+8. Commit at, branch'ini gönder, PR aç ve bir arkadaşını inceleyici seç.
 
 Kod örnekleri ve tüm kurallar [AGENTS.md](AGENTS.md)'de. Yapay zeka aracı
 kullanıyorsanız ondan önce bu dosyayı okumasını isteyin.
+
+## Özellikler
+
+Her kişi kendi özelliğini bitirdiğinde kendi başlığının altını doldurur:
+özelliğin ne yaptığı, nasıl kullanıldığı, varsa ekran görüntüsü. Başkasının
+başlığını değiştirmeyin.
+
+### 1. Kullanıcı ve Güvenlik
+
+<!-- 1. kişi doldurur. -->
+
+### 2. Not İşlemleri
+
+<!-- 2. kişi doldurur. -->
+
+### 3. Etiket ve Arama
+
+<!-- 3. kişi doldurur. -->
+
+### 4. Arşiv ve Çöp Kutusu
+
+<!-- 4. kişi doldurur. -->
+
+### 5. Liste Notları, Hatırlatıcı, Sabitleme, Renk
+
+<!-- 5. kişi doldurur. -->
 
 ## Testler
 
@@ -221,6 +319,7 @@ kullanacak; ayarlar `sonar-project.properties` dosyasında.
 | `models.py` değişti, uygulama hata veriyor | Tablolar yalnızca yoksa oluşturulur, var olanlar güncellenmez. `backend/beyaztakim.db` dosyasını silip `python -m app.seed` çalıştırın. |
 | `npm install` ya da `npm run dev` hata veriyor | Node sürümünüz 22.22'den eski olabilir: `node --version` |
 | Port 8000 ya da 5173 kullanımda | Diğer terminaldeki eski sunucuyu kapatın (`Ctrl+C`). |
+| `git push` reddedildi: "protected branch" | main'e doğrudan gönderdiniz. [Rehberdeki çözüm](docs/githubkullanım.md#8-sık-karşılaşılan-sorunlar) |
 
 ## Proje yapısı
 
@@ -231,26 +330,29 @@ backend/
     config.py        .env'den okunan ayarlar
     database.py      SQLite bağlantısı
     models.py        Tablolar
-    schemas.py       API girdi/çıktı şemaları
     dependencies.py  get_current_user
     seed.py          Örnek veri betiği
+    schemas/         common.py (ortak) + her özelliğin şemaları
     routers/         Uç noktalar (her özellik bir dosya)
     services/        İş mantığı (her özellik bir dosya) + errors.py
-  tests/             pytest testleri
+  tests/             pytest testleri (her özellik bir dosya)
 frontend/
   src/
     api/             Backend çağrıları; client.js backend adresini tek yerden okur
-    components/      Ortak bileşenler (Layout, NoteCard, NoteGrid, ...)
-    pages/           Sayfalar (her sayfa bir dosya, menüye otomatik eklenir)
-docs/                Fonksiyon sözleşmeleri ve veri modeli
-AGENTS.md            Ekip ve yapay zeka araçları için kodlama kuralları
+    components/      Ortak bileşenler ve kişilere ayrılmış yerler
+      note-card/     Not kartındaki kişilere ayrılmış yerler
+    pages/           Sayfalar (her sayfa bir dosya, otomatik eklenir)
+docs/                Fonksiyonlar, veri modeli, GitHub rehberi
+.github/             PR şablonu ve ortak dosyaların sahibi (CODEOWNERS)
+AGENTS.md            Ekip ve yapay zeka araçları için kurallar
 ```
 
 ## Dokümanlar
 
 - [Fonksiyonlar](docs/fonksiyonlar.md): her fonksiyonun sorumlusu, girdisi, çıktısı ve hata durumları
 - [Veri modeli](docs/veri-modeli.md): tablolar ve ilişkileri
-- [AGENTS.md](AGENTS.md): kodlama kuralları ve kod örnekleri
+- [GitHub Kullanım Rehberi](docs/githubkullanım.md): branch, commit, PR, inceleme, birleştirme adım adım
+- [AGENTS.md](AGENTS.md): kurallar, ortak dosyalar, dosya sahipliği ve kod örnekleri
 
 ## Yapay Zeka Kullanımı
 
