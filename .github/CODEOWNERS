@@ -1,0 +1,55 @@
+# Ortak dosyalar (bkz. AGENTS.md > Ortak dosyalar).
+# Bu dosyalara dokunan PR'lar, 4. kişinin (altyapı sorumlusu) onayı olmadan
+# main'e birleştirilemez. Listede olmayan dosyalar için 1 arkadaş onayı yeterlidir.
+
+# Backend
+/backend/app/main.py                @buraksipahi058-svg
+/backend/app/config.py              @buraksipahi058-svg
+/backend/app/database.py            @buraksipahi058-svg
+/backend/app/models.py              @buraksipahi058-svg
+/backend/app/dependencies.py        @buraksipahi058-svg
+/backend/app/seed.py                @buraksipahi058-svg
+/backend/app/schemas/__init__.py    @buraksipahi058-svg
+/backend/app/schemas/common.py      @buraksipahi058-svg
+/backend/app/routers/__init__.py    @buraksipahi058-svg
+/backend/app/services/__init__.py   @buraksipahi058-svg
+/backend/app/services/errors.py     @buraksipahi058-svg
+/backend/tests/conftest.py          @buraksipahi058-svg
+/backend/tests/test_app_setup.py    @buraksipahi058-svg
+/backend/tests/test_config.py       @buraksipahi058-svg
+/backend/tests/test_dependencies.py @buraksipahi058-svg
+/backend/tests/test_health.py       @buraksipahi058-svg
+/backend/tests/test_seed.py         @buraksipahi058-svg
+/backend/requirements.txt           @buraksipahi058-svg
+/backend/pyproject.toml             @buraksipahi058-svg
+
+# Frontend
+/frontend/src/main.jsx                    @buraksipahi058-svg
+/frontend/src/App.jsx                     @buraksipahi058-svg
+/frontend/src/routes.js                   @buraksipahi058-svg
+/frontend/src/index.css                   @buraksipahi058-svg
+/frontend/src/api/client.js               @buraksipahi058-svg
+/frontend/src/api/health.js               @buraksipahi058-svg
+/frontend/src/components/Layout.jsx       @buraksipahi058-svg
+/frontend/src/components/Layout.css       @buraksipahi058-svg
+/frontend/src/components/PageTransition.jsx @buraksipahi058-svg
+/frontend/src/components/ApiStatus.jsx    @buraksipahi058-svg
+/frontend/src/components/EmptyState.jsx   @buraksipahi058-svg
+/frontend/src/components/Icon.jsx         @buraksipahi058-svg
+/frontend/src/components/noteColors.js    @buraksipahi058-svg
+/frontend/src/pages/NotFoundPage.jsx      @buraksipahi058-svg
+/frontend/package.json                    @buraksipahi058-svg
+/frontend/package-lock.json               @buraksipahi058-svg
+/frontend/.npmrc                          @buraksipahi058-svg
+/frontend/vite.config.js                  @buraksipahi058-svg
+/frontend/index.html                      @buraksipahi058-svg
+/frontend/public/                         @buraksipahi058-svg
+
+# Kök ve dokümanlar
+/AGENTS.md                  @buraksipahi058-svg
+/.env.example               @buraksipahi058-svg
+/.gitignore                 @buraksipahi058-svg
+/sonar-project.properties   @buraksipahi058-svg
+/.github/                   @buraksipahi058-svg
+/docs/veri-modeli.md        @buraksipahi058-svg
+/docs/github*               @buraksipahi058-svg

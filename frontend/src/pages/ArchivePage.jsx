@@ -1,6 +1,7 @@
 import EmptyState from '../components/EmptyState.jsx';
 
-// Yer tutucu sayfa: arşiv özelliğinin sahibi bu dosyayı dolduracak.
+// Sahibi: 4. kişi (Arşiv ve Çöp Kutusu)
+// Yer tutucu sayfa: arşivdeki notlar burada gösterilecek.
 export default function ArchivePage() {
   return <EmptyState icon="archive" message="Arşivlenen notlarınız burada görünür" />;
 }

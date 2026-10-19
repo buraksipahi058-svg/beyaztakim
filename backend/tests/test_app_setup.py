@@ -26,6 +26,13 @@ def test_discover_routers_returns_routers_sorted_by_module_name(tmp_path, monkey
     assert [router.prefix for router in routers] == ["/a", "/b"]
 
 
+def test_feature_routers_have_unique_prefixes():
+    prefixes = [router.prefix for router in discover_routers()]
+
+    assert prefixes, "app/routers altında router bulunamadı"
+    assert len(prefixes) == len(set(prefixes)), f"Aynı önek birden çok router'da: {prefixes}"
+
+
 def test_service_error_handler_uses_error_status_code():
     response = asyncio.run(service_error_handler(None, NotFoundError("Not bulunamadı.")))
 

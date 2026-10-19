@@ -35,6 +35,13 @@
   color: var(--text-muted);
 }
 
+.topbar__search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
 .icon-button {
   display: inline-grid;
   place-items: center;

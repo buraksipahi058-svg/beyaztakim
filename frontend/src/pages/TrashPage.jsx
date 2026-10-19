@@ -1,6 +1,7 @@
 import EmptyState from '../components/EmptyState.jsx';
 
-// Yer tutucu sayfa: çöp kutusu özelliğinin sahibi bu dosyayı dolduracak.
+// Sahibi: 4. kişi (Arşiv ve Çöp Kutusu)
+// Yer tutucu sayfa: çöp kutusundaki notlar burada gösterilecek.
 export default function TrashPage() {
   return <EmptyState icon="trash" message="Çöp kutusunda not yok" />;
 }
