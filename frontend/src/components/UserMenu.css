@@ -1,0 +1,32 @@
+/* Sahibi: 1. kişi (Kullanıcı ve Güvenlik) */
+/* Üst çubuğun en sağındaki kullanıcı menüsünün biçimleri. */
+
+.user-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.user-menu__email {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.user-menu__logout {
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 720px) {
+  .user-menu__email {
+    display: none;
+  }
+}

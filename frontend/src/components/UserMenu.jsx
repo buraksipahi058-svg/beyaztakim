@@ -8,8 +8,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { getCurrentUser, logoutUser } from '../api/auth.js';
 import Icon from './Icon.jsx';
-import './UserMenu.css';
-
+import "./UserMenu.css";
 export default function UserMenu() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
