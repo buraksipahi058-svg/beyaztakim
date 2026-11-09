@@ -93,28 +93,166 @@ _Henüz eklenmedi._
 
 ## 2. Not İşlemleri
 
-- **Sorumlu kişi:**
+- **Sorumlu kişi:** 2. kişi
 - **Uç nokta öneki:** `/notes`
 - **Dosyalar:** bkz. [AGENTS.md > Dosya sahipliği](../AGENTS.md#dosya-sahipliği)
 
 ### Hazır olanlar
 
-Altyapıyla gelen, artık 2. kişiye ait bileşenler. Not kartındaki diğer
-kişilere ayrılmış yerler (`components/note-card/`) silinmemelidir.
+Altyapıyla gelen, 2. kişiye ait bileşenler. Not kartındaki diğer kişilere
+ayrılmış yerler (`components/note-card/`) korunmuştur. Aşağıdaki bileşenlerin
+içleri gerçek API ile çalışacak şekilde dolduruldu (durum: Tamamlandı).
+`sampleNotes.js` örnek veri dosyası API hazır olunca silindi.
 
 | Fonksiyon | Dosya | Ne yapar | Girdi | Çıktı | Hata durumları |
 |---|---|---|---|---|---|
-| `HomePage` | frontend/src/pages/HomePage.jsx | Ana sayfa (`/`). Notları "Sabitlenenler" ve "Diğerleri" olarak iki ızgarada gösterir. Şimdilik `sampleNotes` örnek verisiyle çalışır. | — | Not formu yeri, iki not ızgarası; not yoksa boş durum yazısı | — |
+| `HomePage` | frontend/src/pages/HomePage.jsx | Ana sayfa (`/`). Notları API'den yükler; "Sabitlenenler" ve "Diğerleri" olarak iki ızgarada gösterir. Yükleme/hata durumu ve boş durum yazısı gösterir. | — | Not formu, iki not ızgarası; hata/yükleme/boş durum yazıları | Notlar yüklenemezse ekranda hata mesajı |
+| `handleNoteSaved` | frontend/src/pages/HomePage.jsx (HomePage içinde) | Formdan gelen kaydı listeye ekler (yoksa) ya da günceller (varsa). | `savedNote: Note` | — (listeyi günceller) | — |
 | `handleNoteChange` | frontend/src/pages/HomePage.jsx (HomePage içinde) | Listedeki notu güncel haliyle değiştirir. | `updatedNote: Note` | — (listeyi günceller) | — |
 | `handleNoteRemove` | frontend/src/pages/HomePage.jsx (HomePage içinde) | Notu listeden çıkarır. | `noteId: number` | — (listeyi günceller) | — |
-| `NoteGrid` | frontend/src/components/NoteGrid.jsx | Not kartlarını sırayla belirerek ızgarada gösterir; çıkan kart küçülerek kaybolur. | `{ notes: Note[], onNoteChange, onNoteRemove }` | Kart ızgarası | — |
-| `NoteCard` | frontend/src/components/NoteCard.jsx | Tek notu renkli kart olarak gösterir; başlık, içerik ve diğer kişilere ayrılmış yerleri içerir. | `{ note: Note, onNoteChange, onNoteRemove }` | Not kartı | — |
-| `NoteForm` | frontend/src/components/NoteForm.jsx | Not ekleme/düzenleme formunun yeri. Şimdilik boş. | — | `null` | — |
-| `sampleNotes` (veri) | frontend/src/api/sampleNotes.js | Notlar API'si yazılana kadar kullanılan örnek notlar. API hazır olunca silinecek. | — | `Note[]` | — |
+| `NoteGrid` | frontend/src/components/NoteGrid.jsx | Not kartlarını sırayla belirerek ızgarada gösterir; çıkan kart küçülerek kaybolur. | `{ notes: Note[], onNoteChange, onNoteRemove, onEdit }` | Kart ızgarası | — |
+| `NoteCard` | frontend/src/components/NoteCard.jsx | Tek notu renkli kart olarak gösterir; başlık, içerik ve diğer kişilere ayrılmış yerleri içerir. Sağ altta düzenleme düğmesi vardır (`onEdit` verilmişse). | `{ note: Note, onNoteChange, onNoteRemove, onEdit? }` | Not kartı | — |
+| `NoteForm` | frontend/src/components/NoteForm.jsx | "Not alın..." alanı: metin/liste türü seçimi, başlık, içerik ya da madde satırları, renk seçimi. Yeni notu `createNote`, düzenlemeyi `updateNote` ile kaydeder. Düzenleme modunda liste maddeleri salt okunurdur (5. kişinin `/checklist` özelliği). | `{ editingNote?: Note \| null, onNoteSaved?(note), onCancelEdit?() }` | Ekleme/düzenleme formu; kayıtta `onNoteSaved` çağrılır | Kayıt başarısızsa formda hata mesajı (400 / 422) |
 
 ### Fonksiyonlar
 
-_Henüz eklenmedi._
+#### `_validate_color`
+
+- **Sorumlu kişi:** 2. kişi
+- **Dosya:** backend/app/services/notes.py
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Renk adının bilinen listede (`default` ... `gray`, bkz. docs/veri-modeli.md) olduğunu kontrol eder.
+
+**Girdi:** `color: str`
+
+**Çıktı:** `str` (geçerli renk adı)
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Bilinmeyen renk adı | `ValidationError` | 400 |
+
+#### `create_note`
+
+- **Sorumlu kişi:** 2. kişi
+- **Dosya:** backend/app/services/notes.py
+- **Uç nokta:** POST /notes → 201 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcı için yeni not oluşturur. Liste notuysa maddeleri `position: 0, 1, 2, ...` sırasıyla ekler.
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | FastAPI `get_db` ile verir |
+| `user` | `User` | Evet | Notun sahibi (`get_current_user` verir) |
+| `data` | `NoteCreate` (title, content, note_type, color, checklist_items) | Evet | İstek gövdesi |
+
+**Çıktı:** `Note`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Bilinmeyen renk | `ValidationError` | 400 |
+| Metin notuna madde verilmesi | `ValidationError` | 400 |
+| Gövde şemaya uymuyor (ör. bilinmeyen note_type) | (Pydantic) | 422 |
+
+#### `list_notes`
+
+- **Sorumlu kişi:** 2. kişi
+- **Dosya:** backend/app/services/notes.py
+- **Uç nokta:** GET /notes → 200 `list[NoteRead]`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcının arşivde ve çöp kutusunda olmayan notlarını döndürür; sıralama sabitlenenler üste, sonra en son güncellenenlerdir.
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Notların sahibi |
+
+**Çıktı:** `list[Note]`
+
+**Hata durumları:** —
+
+#### `get_note`
+
+- **Sorumlu kişi:** 2. kişi
+- **Dosya:** backend/app/services/notes.py
+- **Uç nokta:** GET /notes/{note_id} → 200 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcının tek bir notunu döndürür; sorguda her zaman `user_id` koşulu vardır.
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Notun sahibi |
+| `note_id` | `int` | Evet | Yoldan gelen not kimliği |
+
+**Çıktı:** `Note`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+
+#### `update_note`
+
+- **Sorumlu kişi:** 2. kişi
+- **Dosya:** backend/app/services/notes.py
+- **Uç nokta:** PATCH /notes/{note_id} → 200 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Notun başlık, içerik, renk ve sabitleme alanlarını günceller; yalnızca gönderilen alanlar değişir. Liste maddelerinin düzenlenmesi 5. kişinin `/checklist` uç noktasının işidir.
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Notun sahibi |
+| `note_id` | `int` | Evet | Not kimliği |
+| `data` | `NoteUpdate` (title, content, color, is_pinned — tümü opsiyonel) | Evet | İstek gövdesi |
+
+**Çıktı:** `Note`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Bilinmeyen renk | `ValidationError` | 400 |
+| Gövde şemaya uymuyor | (Pydantic) | 422 |
+
+### Uç noktalar (router)
+
+| Fonksiyon | Dosya | Uç nokta | Ne yapar | Çıktı | Hata durumları |
+|---|---|---|---|---|---|
+| `create_note` | backend/app/routers/notes.py | POST /notes | Yeni not oluşturur. | 201 `NoteRead` | 400 / 404 / 422 |
+| `list_notes` | backend/app/routers/notes.py | GET /notes | Aktif notları listeler. | 200 `list[NoteRead]` | 401 jeton yoksa |
+| `read_note` | backend/app/routers/notes.py | GET /notes/{note_id} | Tek not döndürür. | 200 `NoteRead` | 404 / 401 |
+| `update_note` | backend/app/routers/notes.py | PATCH /notes/{note_id} | Notu kısmen günceller. | 200 `NoteRead` | 400 / 404 / 401 / 422 |
+
+### Frontend API
+
+| Fonksiyon | Dosya | Ne yapar | Girdi | Çıktı | Hata durumları |
+|---|---|---|---|---|---|
+| `listNotes` | frontend/src/api/notes.js | GET /notes çağırır. | — | `Promise<Note[]>` | 401 → `ApiError` (jeton silinir) |
+| `getNote` | frontend/src/api/notes.js | GET /notes/{id} çağırır. | `noteId: number` | `Promise<Note>` | 404 / 401 → `ApiError` |
+| `createNote` | frontend/src/api/notes.js | POST /notes çağırır. | `noteData: NoteCreate` | `Promise<Note>` | 400 / 422 / 401 → `ApiError` |
+| `updateNote` | frontend/src/api/notes.js | PATCH /notes/{id} çağırır. | `noteId: number`, `noteData: NoteUpdate` | `Promise<Note>` | 400 / 404 / 401 / 422 → `ApiError` |
+
+---
 
 ---
 
