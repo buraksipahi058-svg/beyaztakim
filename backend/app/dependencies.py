@@ -16,32 +16,40 @@ Ortak dosyadır. Tek istisna: get_current_user'ın içini gerçek giriş sistemi
 
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
-from sqlalchemy import select
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
 from app.database import get_db
 from app.models import User
+from app.services import auth as auth_service
+from app.services.errors import ServiceError
 
 DbSession = Annotated[Session, Depends(get_db)]
 
+# Swagger'daki "Authorize" düğmesini de açan Bearer şeması.
+# auto_error=False: başlık yoksa kendi 403'ünü atmasın, 401'i biz döndürelim.
+_bearer_scheme = HTTPBearer(auto_error=False)
 
-def get_current_user(db: DbSession) -> User:
+
+def get_current_user(
+    db: DbSession,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)] = None,
+) -> User:
     """Giriş yapmış kullanıcıyı döndürür.
 
-    Şimdilik gerçek bir giriş sistemi yok: seed betiğindeki örnek kullanıcı
-    döndürülür. Kimlik doğrulama eklendiğinde yalnızca bu fonksiyonun içi
-    değişecek; onu kullanan router'lar aynı kalacak.
+    İsteğin `Authorization: Bearer <jeton>` başlığındaki oturum jetonunu
+    app/services/auth.py'deki get_user_by_token ile doğrular; jeton yoksa,
+    imzası bozuksa veya süresi dolduysa 401 döndürür.
+    (İçi 1. kişi tarafından gerçek giriş sistemiyle değiştirildi; adı ve
+    dönüş tipi altyapıyla aynı kaldı.)
     """
-    email = get_settings().seed_user_email
-    user = db.scalar(select(User).where(User.email == email))
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Giriş yapmış kullanıcı bulunamadı. Önce `python -m app.seed` çalıştırın.",
-        )
-    return user
+    token = credentials.credentials if credentials is not None else None
+    try:
+        return auth_service.get_user_by_token(db, token)
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
