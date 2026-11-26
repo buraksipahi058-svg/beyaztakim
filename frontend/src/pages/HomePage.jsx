@@ -85,7 +85,10 @@ export default function HomePage() {
 
       {!isNarrowScreen && notes.length > 0 && (
         <>
-          <p className="page-hint">Notları sürükleyip istediğiniz yere bırakabilirsiniz.</p>
+          <p className="page-hint">
+            Notları sürükleyip istediğiniz yere bırakın. Tuvalin boş bir yerinden tutup
+            sürükleyerek tuvali kaydırabilirsiniz.
+          </p>
           <NoteCanvas notes={notes} {...gridProps} />
         </>
       )}

@@ -280,12 +280,15 @@ Uç noktalar: `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`,
   renk seçilip **Not al** ile kaydedilir. Seçilen renk form üzerinde hemen
   görünür. Başlıkta Enter içeriğe ya da ilk maddeye geçer; maddede Enter yeni
   madde açar, boş maddede Backspace onu siler.
-- **Tuval (sürükle-bırak):** Ana sayfa bir tahta gibidir. Kartın boş bir
-  yerinden tutup sürükleyince not bırakıldığı yerde kalır ve konum kaydedilir;
-  sayfa yenilense de aynı yerde durur. Yeni notlar ilk boş yere yerleşir.
-  Sabitlenen notlar raptiye rozeti taşır ve her zaman diğerlerinin üstünde
-  çizilir. Kart üzerindeki düğmeler (renk, etiket, arşiv vb.) sürükleme
-  başlatmaz.
+- **Tuval (sürükle-bırak):** Ana sayfa bir tahta gibidir: pencereye sığan,
+  sayfadan koyu, noktalı bir alan. Kartın boş bir yerinden tutup sürükleyince
+  not bırakıldığı yerde kalır ve konum kaydedilir; sayfa yenilense de aynı
+  yerde durur. Kart tuvalin dışına çıkmaz; kenara dayanınca tuval o yöne
+  kendiliğinden kayar. Tuvalin boş bir yerinden tutup sürükleyerek (ya da
+  fare tekerleği / kaydırma çubuklarıyla) tuval sağa, sola, yukarı, aşağı
+  kaydırılır. Yeni notlar ilk boş yere yerleşir. Sabitlenen notlar raptiye
+  rozeti taşır ve her zaman diğerlerinin üstünde çizilir. Kart üzerindeki
+  düğmeler (renk, etiket, arşiv vb.) sürükleme başlatmaz.
 - **Dar ekran:** 720 pikselden dar ekranlarda (telefon) tuval kapanır;
   sabitlenen notlar "Sabitlenenler" başlığı altında üstte, diğerleri altında
   sıralanır. Tuvaldeki konumlar korunur.

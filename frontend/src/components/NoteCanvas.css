@@ -1,16 +1,40 @@
 /* Sahibi: 2. kişi (Not İşlemleri) */
 
-/* Sağa taşan kartlar için yatay kaydırma. */
+/* Tuvalin görünen kısmı: sayfadan koyu, çerçeveli ve kendi içinde kayan bir alan.
+   Yüksekliği NoteCanvas.jsx pencereye göre verir. */
 .note-canvas {
+  --canvas-bg: #e8eaed;
+  --canvas-dot: #c4c8cd;
+
   position: relative;
-  overflow-x: auto;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #d5d8dc;
+  border-radius: 12px;
+  background: var(--canvas-bg);
+  box-shadow: inset 0 1px 3px rgba(60, 64, 67, 0.12);
+  user-select: none;
 }
 
+/* Kartların durduğu alan. Noktalı desen bu alanda olduğu için tuval kayınca
+   desen de kayar ve hareket hissedilir. Boş yerden tutup sürükleyince tuval kayar. */
 .note-canvas__area {
   position: relative;
-  min-width: 100%;
+  background-color: var(--canvas-bg);
+  background-image: radial-gradient(var(--canvas-dot) 1px, transparent 1.5px);
+  background-size: 22px 22px;
+  background-position: 11px 11px;
+  cursor: grab;
+  touch-action: none;
 }
 
+/* Tuval ya da kart sürüklenirken her yerde "tutuyor" imleci. */
+.note-canvas--grabbing,
+.note-canvas--grabbing * {
+  cursor: grabbing !important;
+}
+
+/* Kenardan içeride başlama payı (top/left) NoteCanvas.jsx'te CANVAS_PADDING ile verilir. */
 .canvas-note {
   position: absolute;
   top: 0;
@@ -21,17 +45,23 @@
   cursor: grab;
 }
 
-.canvas-note:active {
-  cursor: grabbing;
-}
-
 .canvas-note .note-card {
   cursor: inherit;
+}
+
+/* Sürüklenen kart biraz kalkmış gibi görünsün. */
+.canvas-note--dragging .note-card {
+  box-shadow: 0 6px 18px rgba(60, 64, 67, 0.28);
 }
 
 /* Kart üzerinde etiket, renk ya da hatırlatıcı kutusu açıkken kart en üste çıksın. */
 .canvas-note:has(.tag-picker, .color-palette, .reminder-picker) {
   z-index: 5000 !important;
+}
+
+/* Açılan kutu görünür yapılırken tuvalin kenarına yapışmasın. */
+.canvas-note :is(.tag-picker, .color-palette, .reminder-picker) {
+  scroll-margin: 12px;
 }
 
 /* Sabitlenmiş kartın sağ üst köşesindeki raptiye rozeti. */
