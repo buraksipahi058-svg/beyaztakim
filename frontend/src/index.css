@@ -102,3 +102,26 @@ a {
   justify-items: center;
   gap: 16px;
 }
+
+/* Not kartının alt çubuğundaki küçük ikon düğmeleri (kişilere ayrılmış
+   yerlerde kullanılır): <button className="icon-button note-action"> */
+.note-action {
+  width: 34px;
+  height: 34px;
+  color: var(--text);
+}
+
+.note-action:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.note-action:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Kart üzerindeki bir işlem başarısız olunca gösterilen kısa hata yazısı */
+.note-action-error {
+  color: #b3261e;
+  font-size: 0.8rem;
+}

@@ -396,17 +396,224 @@ yoksa bir şey değişmez.
 - **Uç nokta önekleri:** `/archive`, `/trash`
 - **Dosyalar:** bkz. [AGENTS.md > Dosya sahipliği](../AGENTS.md#dosya-sahipliği)
 
-### Hazır yer tutucular
+Kurallar:
 
-| Fonksiyon | Dosya | Ne yapar | Girdi | Çıktı | Hata durumları |
-|---|---|---|---|---|---|
-| `ArchiveTrashActions` | frontend/src/components/note-card/ArchiveTrashActions.jsx | Not kartındaki arşiv ve çöp düğmelerinin yeri. Şimdilik boş. | `{ note, onNoteChange, onNoteRemove }` | `null` | — |
-| `ArchivePage` | frontend/src/pages/ArchivePage.jsx | `/archive` sayfası. Şimdilik boş durum yazısı. | — | "Arşivlenen notlarınız burada görünür" | — |
-| `TrashPage` | frontend/src/pages/TrashPage.jsx | `/trash` sayfası. Şimdilik boş durum yazısı. | — | "Çöp kutusunda not yok" | — |
+- Arşiv ve çöp kutusu ayrı bayraklardır (`is_archived`, `is_trashed`). Çöpe
+  atılan arşiv notu, geri yüklenince arşive döner.
+- Çöpteki not arşivlenemez ve arşivden çıkarılamaz; önce geri yüklenmelidir.
+- Yalnızca çöpteki not kalıcı olarak silinebilir.
+- Arşivlenen notun sabitlemesi kaldırılır.
 
 ### Fonksiyonlar
 
-_Henüz eklenmedi._
+#### `list_archived_notes`
+
+- **Sorumlu kişi:** 4. kişi
+- **Dosya:** backend/app/services/archive.py
+- **Uç nokta:** GET /archive → 200 `list[NoteRead]`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcının arşivdeki ve çöpte olmayan notlarını, en son
+güncellenen üstte olacak şekilde döndürür.
+
+**Girdi:** `db: Session`, `user: User`
+
+**Çıktı:** `list[Note]`
+
+**Hata durumları:** —
+
+#### `_get_note_outside_trash`
+
+- **Sorumlu kişi:** 4. kişi
+- **Dosya:** backend/app/services/archive.py
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcının notunu döndürür; not çöpteyse arşiv işlemine izin vermez.
+
+**Girdi:** `db: Session`, `user: User`, `note_id: int`
+
+**Çıktı:** `Note`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Not çöp kutusunda | `ValidationError` | 400 |
+
+#### `archive_note`
+
+- **Sorumlu kişi:** 4. kişi
+- **Dosya:** backend/app/services/archive.py
+- **Uç nokta:** POST /archive/{note_id} → 200 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Notu arşive taşır (`is_archived: true`) ve sabitlemesini kaldırır.
+Not zaten arşivdeyse bir şey değişmez.
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Notun sahibi (`get_current_user` verir) |
+| `note_id` | `int` | Evet | Yoldan gelen not kimliği |
+
+**Çıktı:** `Note` (güncel hali)
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Not çöp kutusunda | `ValidationError` | 400 |
+
+#### `unarchive_note`
+
+- **Sorumlu kişi:** 4. kişi
+- **Dosya:** backend/app/services/archive.py
+- **Uç nokta:** DELETE /archive/{note_id} → 200 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Notu arşivden çıkarır (`is_archived: false`); not ana sayfaya döner.
+
+**Girdi:** `db: Session`, `user: User`, `note_id: int`
+
+**Çıktı:** `Note` (güncel hali)
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Not çöp kutusunda | `ValidationError` | 400 |
+
+#### `list_trashed_notes`
+
+- **Sorumlu kişi:** 4. kişi
+- **Dosya:** backend/app/services/trash.py
+- **Uç nokta:** GET /trash → 200 `list[NoteRead]`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcının çöp kutusundaki notlarını, en son çöpe atılan üstte
+olacak şekilde döndürür.
+
+**Girdi:** `db: Session`, `user: User`
+
+**Çıktı:** `list[Note]`
+
+**Hata durumları:** —
+
+#### `move_note_to_trash`
+
+- **Sorumlu kişi:** 4. kişi
+- **Dosya:** backend/app/services/trash.py
+- **Uç nokta:** POST /trash/{note_id} → 200 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Notu çöp kutusuna taşır (`is_trashed: true`) ve zamanını
+`trashed_at`'e yazar. Not zaten çöpteyse bir şey değişmez (ilk zaman korunur).
+
+**Girdi:** `db: Session`, `user: User`, `note_id: int`
+
+**Çıktı:** `Note` (güncel hali)
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+
+#### `_get_trashed_note`
+
+- **Sorumlu kişi:** 4. kişi
+- **Dosya:** backend/app/services/trash.py
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcının çöp kutusundaki notunu döndürür.
+
+**Girdi:** `db: Session`, `user: User`, `note_id: int`
+
+**Çıktı:** `Note`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Not çöp kutusunda değil | `ValidationError` | 400 |
+
+#### `restore_note`
+
+- **Sorumlu kişi:** 4. kişi
+- **Dosya:** backend/app/services/trash.py
+- **Uç nokta:** POST /trash/{note_id}/restore → 200 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Notu çöp kutusundan geri yükler (`is_trashed: false`,
+`trashed_at: null`). Not, çöpe atılmadan önceki yerine (ana sayfa ya da
+arşiv) döner.
+
+**Girdi:** `db: Session`, `user: User`, `note_id: int`
+
+**Çıktı:** `Note` (güncel hali)
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Not çöp kutusunda değil | `ValidationError` | 400 |
+
+#### `delete_note_permanently`
+
+- **Sorumlu kişi:** 4. kişi
+- **Dosya:** backend/app/services/trash.py
+- **Uç nokta:** DELETE /trash/{note_id} → 204
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Çöp kutusundaki notu kalıcı olarak siler. Notun liste
+maddeleri ve etiket bağları da silinir; etiketlerin kendisi kalır.
+
+**Girdi:** `db: Session`, `user: User`, `note_id: int`
+
+**Çıktı:** `None`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Not çöp kutusunda değil | `ValidationError` | 400 |
+
+### Uç noktalar (router)
+
+| Fonksiyon | Dosya | Uç nokta | Ne yapar | Çıktı | Hata durumları |
+|---|---|---|---|---|---|
+| `list_archived_notes` | backend/app/routers/archive.py | GET /archive | Arşivdeki notları listeler. | 200 `list[NoteRead]` | 401 |
+| `archive_note` | backend/app/routers/archive.py | POST /archive/{note_id} | Notu arşivler. | 200 `NoteRead` | 400 / 401 / 404 |
+| `unarchive_note` | backend/app/routers/archive.py | DELETE /archive/{note_id} | Notu arşivden çıkarır. | 200 `NoteRead` | 400 / 401 / 404 |
+| `list_trashed_notes` | backend/app/routers/trash.py | GET /trash | Çöpteki notları listeler. | 200 `list[NoteRead]` | 401 |
+| `move_note_to_trash` | backend/app/routers/trash.py | POST /trash/{note_id} | Notu çöpe taşır. | 200 `NoteRead` | 401 / 404 |
+| `restore_note` | backend/app/routers/trash.py | POST /trash/{note_id}/restore | Notu geri yükler. | 200 `NoteRead` | 400 / 401 / 404 |
+| `delete_note_permanently` | backend/app/routers/trash.py | DELETE /trash/{note_id} | Çöpteki notu kalıcı siler. | 204 (boş) | 400 / 401 / 404 |
+
+### Frontend
+
+| Fonksiyon | Dosya | Ne yapar | Girdi | Çıktı | Hata durumları |
+|---|---|---|---|---|---|
+| `listArchivedNotes` | frontend/src/api/archive.js | GET /archive çağırır. | — | `Promise<Note[]>` | 401 → `ApiError` |
+| `archiveNote` | frontend/src/api/archive.js | POST /archive/{id} çağırır. | `noteId: number` | `Promise<Note>` | 400 / 404 / 401 → `ApiError` |
+| `unarchiveNote` | frontend/src/api/archive.js | DELETE /archive/{id} çağırır. | `noteId: number` | `Promise<Note>` | 400 / 404 / 401 → `ApiError` |
+| `listTrashedNotes` | frontend/src/api/trash.js | GET /trash çağırır. | — | `Promise<Note[]>` | 401 → `ApiError` |
+| `moveNoteToTrash` | frontend/src/api/trash.js | POST /trash/{id} çağırır. | `noteId: number` | `Promise<Note>` | 404 / 401 → `ApiError` |
+| `restoreNote` | frontend/src/api/trash.js | POST /trash/{id}/restore çağırır. | `noteId: number` | `Promise<Note>` | 400 / 404 / 401 → `ApiError` |
+| `deleteNotePermanently` | frontend/src/api/trash.js | DELETE /trash/{id} çağırır. | `noteId: number` | `Promise<null>` | 400 / 404 / 401 → `ApiError` |
+| `ArchiveTrashActions` | frontend/src/components/note-card/ArchiveTrashActions.jsx | Kartın alt çubuğundaki düğmeler. Normal not: Arşivle, Çöp kutusuna taşı. Arşivdeki not: Arşivden çıkar, Çöp kutusuna taşı. Çöpteki not: Geri yükle, Kalıcı olarak sil (onay sorar). Başarılı işlemde not bulunduğu listeden çıkar. | `{ note, onNoteRemove }` | İki ikon düğmesi; hata olursa kısa hata yazısı | API hatası kartta yazı olarak gösterilir |
+| `runAction` | ArchiveTrashActions.jsx (içinde) | Düğmeleri kilitleyip işlemi çalıştırır; başarılıysa `onNoteRemove(note.id)` çağırır. | `action: () => Promise` | — | Hata mesajını kartta gösterir |
+| `handleDeleteForever` | ArchiveTrashActions.jsx (içinde) | Onay sorar; "Tamam" denirse notu kalıcı siler. | — | — | — |
+| `ArchivePage` | frontend/src/pages/ArchivePage.jsx | `/archive` sayfası: arşivdeki notları ızgarada gösterir. | — | Not ızgarası; yükleme/hata/boş durum yazıları | Liste yüklenemezse hata yazısı |
+| `TrashPage` | frontend/src/pages/TrashPage.jsx | `/trash` sayfası: çöpteki notları ızgarada gösterir. | — | Açıklama ve not ızgarası; yükleme/hata/boş durum yazıları | Liste yüklenemezse hata yazısı |
 
 ---
 
@@ -668,6 +875,9 @@ Giriş sistemi gelince yalnızca içi değişir; adı ve dönüş tipi aynı kal
 | `Icon` | src/components/Icon.jsx | Adı verilen SVG ikonu çizer. | `{ name: string, size = 22, className }` | `<svg>`; ad bilinmiyorsa `null` | — |
 | `noteColor` | src/components/noteColors.js | Renk adını (`yellow` vb.) ekrandaki renk koduna çevirir. | `name: string` | `string` (ör. `#fff8b8`; bilinmeyen ad → beyaz) | — |
 | `NotFoundPage` | src/pages/NotFoundPage.jsx | Bilinmeyen adresler için 404 sayfası. | — | "Aradığınız sayfa bulunamadı" ve ana sayfa bağlantısı | — |
+| `useNoteList` | src/hooks/useNoteList.js | Not listesi gösteren sayfalar için ortak kanca: listeyi yükler, yükleme/hata durumunu tutar, kart olaylarını listeye uygular. | `loadNotes: () => Promise<Note[]>`, `deps: any[] = []` (değişince yeniden yükler) | `{ notes, isLoading, loadError, handleNoteChange, handleNoteRemove }` | Yükleme başarısızsa `loadError`'a mesaj yazar |
+| `handleNoteChange` | src/hooks/useNoteList.js (useNoteList içinde) | Listedeki notu güncel haliyle değiştirir. | `updatedNote: Note` | — | — |
+| `handleNoteRemove` | src/hooks/useNoteList.js (useNoteList içinde) | Notu listeden çıkarır. | `noteId: number` | — | — |
 ## 1. Kullanıcı ve Güvenlik
 
 - **Sorumlu kişi:** 1. kişi

@@ -28,6 +28,7 @@
 /frontend/src/App.jsx                     @buraksipahi058-svg
 /frontend/src/routes.js                   @buraksipahi058-svg
 /frontend/src/index.css                   @buraksipahi058-svg
+/frontend/src/hooks/                      @buraksipahi058-svg
 /frontend/src/api/client.js               @buraksipahi058-svg
 /frontend/src/api/health.js               @buraksipahi058-svg
 /frontend/src/components/Layout.jsx       @buraksipahi058-svg
