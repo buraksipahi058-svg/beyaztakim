@@ -1,37 +1,26 @@
 # Beyaz Takım Notlar
 
-Google Keep benzeri bir not alma uygulaması. Kullanıcılar metin ve yapılacaklar
-listesi türünde notlar oluşturabilecek, notları renklendirip sabitleyebilecek,
-etiketleyebilecek, arşivleyip çöp kutusuna taşıyabilecek ve hatırlatıcı
-kurabilecek.
+Google Keep benzeri bir not alma uygulaması. Kullanıcılar hesap açıp giriş
+yapar; metin ve yapılacaklar listesi türünde notlar oluşturur, notları
+renklendirip sabitler, etiketler, arar, hatırlatıcı kurar, arşivler ve çöp
+kutusuna taşır.
 
-> **Durum:** Altyapı hazır, özellikler henüz yazılmadı. Her ekip üyesinin
-> kendi boş dosyaları ve ekranda kendine ayrılmış yerleri hazır; herkes kendi
-> özelliğini kendi branch'inde yazıp PR ile ekliyor. Kimin neyi yazdığı
-> [docs/fonksiyonlar.md](docs/fonksiyonlar.md) dosyasında takip edilir.
+## Özellik durumu
 
-## Şu an ne hazır, ne değil?
+Bütün özellikler tamamlandı; ayrıntıları aşağıdaki [Özellikler](#özellikler)
+bölümünde, her fonksiyonun girdi/çıktısı [docs/fonksiyonlar.md](docs/fonksiyonlar.md)'de.
 
-| Hazır (altyapı) | Henüz yok (ekip yazacak) |
-|---|---|
-| Veritabanı tabloları: kullanıcı, not, etiket, kontrol listesi maddesi | Not oluşturma, listeleme, düzenleme API'si |
-| FastAPI uygulaması, `/health`, Swagger dokümanı (`/docs`) | Etiketler ve arama |
-| Örnek veri betiği (seed): 1 kullanıcı, 4 not | Arşiv ve çöp kutusu |
-| Geçici "giriş yapmış kullanıcı" (`get_current_user`) | Kayıt ve giriş (gerçek kimlik doğrulama) |
-| Test altyapısı ve altyapı testleri | Liste maddeleri, hatırlatıcılar, sabitleme, renk |
-| Frontend iskeleti: sol menü, sayfa geçiş animasyonu, animasyonlu not kartları, API bağlantı göstergesi | Frontend'in gerçek verilerle çalışması |
-| Her kişinin boş dosyaları; üst çubukta, sol menüde ve not kartında kişilere ayrılmış yerler | SonarCloud ve otomatik test (CI) bağlantısı |
-| Korumalı main branch'i ve PR ile çalışma düzeni | |
+| Özellik | Sahibi | Durum |
+|---|---|---|
+| Kayıt, giriş, çıkış; parolanın özetlenerek saklanması | 1. kişi | Tamamlandı |
+| Not oluşturma, listeleme, düzenleme; not kartı ve ekleme formu | 2. kişi | Tamamlandı |
+| Etiketler, etikete göre filtreleme ve arama | 3. kişi | Tamamlandı |
+| Altyapı, arşiv ve çöp kutusu | 4. kişi | Tamamlandı |
+| Liste notları, hatırlatıcılar, sabitleme ve renk | 5. kişi | Tamamlandı |
+| SonarCloud ve otomatik test (CI) bağlantısı | 4. kişi | Yapılacak |
 
-Uygulamayı açtığınızda göreceğiniz şeyler hakkında:
-
-- **Ana sayfadaki notlar sabit örnek veridir.** `frontend/src/api/sampleNotes.js`
-  dosyasından gelir, veritabanından gelmez. Notları getiren API yazılınca bu
-  dosya silinecek.
-- **Hatırlatıcılar, Arşiv ve Çöp Kutusu sayfaları boştur.** Giriş (`/login`),
-  kayıt (`/register`) ve arama (`/search`) sayfaları da yer tutucudur.
-- **Giriş sistemi yoktur.** Backend'e gelen her istek seed'deki örnek kullanıcı
-  adına yapılmış sayılır (bkz. [Mimari](#mimari)).
+Uygulamayı açınca önce giriş ekranı gelir. Hesabınız yoksa **Kayıt ol**
+bağlantısından hesap açın; kayıttan sonra otomatik olarak giriş yapılır.
 
 ## Teknolojiler
 
@@ -83,9 +72,9 @@ cp .env.example .env
 
 (Windows PowerShell: `Copy-Item .env.example .env`)
 
-Varsayılan değerlerle çalışır. `SECRET_KEY` şimdilik kullanılmıyor; giriş
-sistemi eklenince rastgele bir değerle doldurulmalı (nasıl üretileceği
-dosyadaki açıklamada yazıyor).
+`SECRET_KEY`'i rastgele bir değerle değiştirin (nasıl üretileceği dosyadaki
+açıklamada yazıyor). Giriş jetonları bu anahtarla imzalanır; boş bırakılırsa
+backend her yeniden başladığında herkesin oturumu kapanır.
 
 ### 3. Backend
 
@@ -112,9 +101,14 @@ uvicorn app.main:app --reload
 
 **Örnek veri:** `python -m app.seed`, `demo@beyaztakim.local` adresli örnek
 kullanıcıyı, 2 etiketi ve 4 notu veritabanına ekler. Tekrar çalıştırmak
-güvenlidir, aynı kayıtları ikinci kez eklemez. Kullanıcının adresi ve parolası
-`.env`'deki `SEED_USER_EMAIL` ve `SEED_USER_PASSWORD` ile değiştirilebilir.
-Parola boşsa rastgele üretilir; giriş sistemi olmadığı için şimdilik gerekmez.
+güvenlidir, aynı kayıtları ikinci kez eklemez.
+
+Uygulamaya girmenin en kolay yolu `/register` sayfasından kendi hesabınızı
+açmaktır. Örnek kullanıcıyla girmek isterseniz seed'i çalıştırmadan önce
+`.env`'deki `SEED_USER_PASSWORD`'ü doldurun (en az 8 karakter). Parola boşsa
+rastgele üretilir ve bu kullanıcıyla giriş yapılamaz. Kullanıcı zaten varsa
+parolası değişmez; o durumda `backend/beyaztakim.db`'yi silip seed'i yeniden
+çalıştırın.
 
 Veritabanı dosyası `backend/beyaztakim.db`'dir. Tablolar backend açılırken
 otomatik oluşturulur.
@@ -149,11 +143,13 @@ React sayfası ─► src/api/<özellik>.js ─► HTTP ─► routers/<özellik
 - **Şemalar** (`backend/app/schemas/`): `common.py` herkesin kullandığı okuma
   şemalarıdır (`NoteRead` vb.); her özelliğin girdi şemaları kendi dosyasındadır.
 - **Giriş yapmış kullanıcı** her zaman `get_current_user` fonksiyonundan alınır
-  (`backend/app/dependencies.py`). Şimdilik seed'deki örnek kullanıcıyı
-  döndürür. Giriş sistemi yazıldığında yalnızca bu fonksiyonun içi değişecek,
-  onu kullanan kodlar aynı kalacak. Frontend tarafında giriş bilgisi
-  `api/authSession.js` üzerinden her isteğe eklenir, menülü sayfalar
-  `RequireAuth` ile korunur.
+  (`backend/app/dependencies.py`). Fonksiyon isteğin
+  `Authorization: Bearer <jeton>` başlığındaki jetonu doğrular; jeton yoksa ya
+  da geçersizse 401 döner. Frontend'de jeton girişte saklanır ve
+  `api/authSession.js` üzerinden her isteğe eklenir; menülü sayfalar
+  `RequireAuth` ile korunur, giriş yapılmamışsa `/login`'e yönlendirir.
+- **Tarihler** UTC saklanır ve API'de `Z` işaretiyle gönderilir; ekranda yerel
+  saatle gösterilir (bkz. [docs/veri-modeli.md](docs/veri-modeli.md#tarih-ve-saatler)).
 - **Otomatik ekleme:** Ortak dosyaları değiştirmeden özellik eklenebilsin diye:
   - `backend/app/routers/` altındaki her dosyanın `router`'ı uygulamaya
     otomatik eklenir. `main.py`'ye dokunmak gerekmez.
@@ -170,7 +166,7 @@ React sayfası ─► src/api/<özellik>.js ─► HTTP ─► routers/<özellik
   | Durum | Kod |
   |---|---|
   | Girdi iş kuralına uymuyor (`ValidationError`) | 400 |
-  | Giriş yapmış kullanıcı bulunamadı | 401 |
+  | Giriş yapılmamış, jeton geçersiz ya da süresi dolmuş | 401 |
   | Yetki yok (`PermissionDeniedError`) | 403 |
   | Kayıt yok ya da başka kullanıcının (`NotFoundError`) | 404 |
   | Çakışma, ör. aynı isimde etiket (`ConflictError`) | 409 |
@@ -263,11 +259,33 @@ başlığını değiştirmeyin.
 
 ### 1. Kullanıcı ve Güvenlik
 
-<!-- 1. kişi doldurur. -->
+- **Kayıt:** `/register` sayfasında e-posta ve parola (en az 8 karakter, iki
+  kez) girilir. Aynı e-postayla ikinci hesap açılamaz. Kayıttan sonra otomatik
+  giriş yapılır.
+- **Giriş ve çıkış:** `/login` sayfasında giriş yapılır; üst çubuğun sağında
+  e-posta ve **Çıkış yap** düğmesi görünür. Giriş yapılmadan menülü sayfalar
+  açılmaz, giriş ekranına yönlendirilir.
+- **Güvenlik:** Parolalar düz metin olarak saklanmaz; PBKDF2-SHA256 (600.000
+  tur, rastgele tuz) ile özetlenir. Girişte imzalı bir oturum jetonu verilir
+  (7 gün geçerli); her istekte `Authorization: Bearer` başlığıyla gönderilir.
+  Her kullanıcı yalnızca kendi notlarını, etiketlerini ve maddelerini görür.
+
+Uç noktalar: `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`,
+`GET /auth/me`.
 
 ### 2. Not İşlemleri
 
-<!-- 2. kişi doldurur. -->
+- **Not ekleme:** Ana sayfanın üstündeki **Not alın...** alanı açılınca
+  başlık, tür (**Metin** ya da **Liste**), içerik ya da madde satırları ve
+  renk seçilip **Not al** ile kaydedilir.
+- **Listeleme:** Ana sayfa arşivde ve çöpte olmayan notları gösterir;
+  sabitlenen notlar "Sabitlenenler" başlığı altında üstte durur, diğerleri en
+  son güncellenen üstte olacak şekilde sıralanır.
+- **Düzenleme:** Kartın sağ altındaki kalem düğmesi notu forma geri yükler;
+  başlık, içerik ve renk değiştirilip **Kaydet**'e basılır. Liste maddeleri
+  kartın üzerinden düzenlenir (5. kişi).
+
+Uç noktalar: `POST /notes`, `GET /notes`, `GET /notes/{id}`, `PATCH /notes/{id}`.
 
 ### 3. Etiket ve Arama
 
@@ -363,7 +381,8 @@ kullanacak; ayarlar `sonar-project.properties` dosyasında.
 |---|---|
 | PowerShell'de `Activate.ps1` "running scripts is disabled" hatası veriyor | Aynı terminalde bir kez `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` çalıştırın, sonra tekrar etkinleştirin. Ya da cmd'de `activate.bat` kullanın. |
 | Sağ üstte **API bağlantısı yok** yazıyor | Backend çalışmıyor ya da `.env`'deki `VITE_API_URL` yanlış. `.env`'i değiştirdikten sonra `npm run dev`'i yeniden başlatın. |
-| API 401 dönüyor: "Giriş yapmış kullanıcı bulunamadı" | Seed çalıştırılmamış: `python -m app.seed` |
+| Sürekli giriş ekranına atılıyorum | Oturum jetonu geçersiz ya da süresi dolmuş (7 gün); tekrar giriş yapın. `.env`'de `SECRET_KEY` boşsa backend her yeniden başladığında oturumlar kapanır, doldurun. |
+| Seed'deki örnek kullanıcıyla giriş yapamıyorum | Parolası rastgele üretilmiş. Bkz. [Kurulum > Örnek veri](#3-backend) ya da `/register`'dan hesap açın. |
 | Tarayıcı konsolunda CORS hatası | Frontend başka bir adreste çalışıyor. Adresi `.env`'deki `CORS_ORIGINS`'e ekleyip backend'i yeniden başlatın. |
 | `models.py` değişti, uygulama hata veriyor | Tablolar yalnızca yoksa oluşturulur, var olanlar güncellenmez. `backend/beyaztakim.db` dosyasını silip `python -m app.seed` çalıştırın. |
 | `npm install` ya da `npm run dev` hata veriyor | Node sürümünüz 22.22'den eski olabilir: `node --version` |
