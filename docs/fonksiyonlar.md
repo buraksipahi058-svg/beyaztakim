@@ -427,7 +427,73 @@ _Henüz eklenmedi._
 
 ### Fonksiyonlar
 
-_Henüz eklenmedi._
+> Not: `PATCH /notes/{note_id}` (2. kişi) de renk ve sabitleme alanlarını
+> değiştirebiliyor. Frontend'in hangisini kullanacağı ekipçe kararlaştırılacak.
+
+#### `update_note_pin`
+
+- **Sorumlu kişi:** 5. kişi
+- **Dosya:** backend/app/services/pin_color.py
+- **Uç nokta:** PATCH /pin-color/{note_id}/pin → 200 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Notu sabitler (`is_pinned: true`) ya da sabitlemeyi kaldırır.
+Sabitlenen not ana sayfada üstte görünür (sıralamayı `list_notes` yapar).
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Notun sahibi (`get_current_user` verir) |
+| `note_id` | `int` | Evet | Yoldan gelen not kimliği |
+| `is_pinned` | `bool` | Evet | `true` sabitler, `false` kaldırır |
+
+**Çıktı:** `Note` (güncel hali)
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Gövdede `is_pinned` yok ya da bool değil | (Pydantic) | 422 |
+
+#### `update_note_color`
+
+- **Sorumlu kişi:** 5. kişi
+- **Dosya:** backend/app/services/pin_color.py
+- **Uç nokta:** PATCH /pin-color/{note_id}/color → 200 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Notun rengini değiştirir. Renk adı, not oluştururken kullanılan
+listeyle (`notes.ALLOWED_NOTE_COLORS`: `default`, `red`, `orange`, `yellow`,
+`green`, `teal`, `blue`, `purple`, `pink`, `brown`, `gray`) aynıdır.
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Notun sahibi |
+| `note_id` | `int` | Evet | Yoldan gelen not kimliği |
+| `color` | `str` | Evet | Yeni renk adı |
+
+**Çıktı:** `Note` (güncel hali)
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Bilinmeyen renk adı | `ValidationError` | 400 |
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Gövdede `color` yok ya da 20 karakterden uzun | (Pydantic) | 422 |
+
+### Uç noktalar (router)
+
+| Fonksiyon | Dosya | Uç nokta | Ne yapar | Çıktı | Hata durumları |
+|---|---|---|---|---|---|
+| `update_note_pin` | backend/app/routers/pin_color.py | PATCH /pin-color/{note_id}/pin | Gövde: `{ "is_pinned": bool }`. Notu sabitler / sabitlemeyi kaldırır. | 200 `NoteRead` | 401 / 404 / 422 |
+| `update_note_color` | backend/app/routers/pin_color.py | PATCH /pin-color/{note_id}/color | Gövde: `{ "color": str }`. Notun rengini değiştirir. | 200 `NoteRead` | 400 / 401 / 404 / 422 |
 
 ---
 
