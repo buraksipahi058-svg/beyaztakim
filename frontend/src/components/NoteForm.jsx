@@ -7,11 +7,14 @@
 // - Düzenleme: editingNote doluysa form onunla önceden doldurulur; kayıtta
 //   updateNote çağrılır. Liste notlarının maddelerini düzenlemek 5. kişinin
 //   /checklist özelliğinin işidir; düzenlemede maddeler salt okunur görünür.
+// - Klavye: başlıkta Enter içeriğe/ilk maddeye geçer; maddede Enter altına yeni
+//   madde açar, boş maddede Backspace onu siler. Form yalnızca "Not al" ile kaydedilir.
+// - Seçilen renk formun arka planına hemen uygulanır.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createNote, updateNote } from '../api/notes.js';
 import Icon from './Icon.jsx';
-import { NOTE_COLORS } from './noteColors.js';
+import { NOTE_COLORS, noteColor } from './noteColors.js';
 import './NoteForm.css';
 
 const EMPTY_ITEMS = [{ text: '', is_done: false }];
@@ -25,6 +28,16 @@ export default function NoteForm({ editingNote = null, onNoteSaved, onCancelEdit
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const contentRef = useRef(null);
+  const itemRefs = useRef([]);
+  // Madde listesi değişince (satır eklendi/silindi) imlecin gideceği satır.
+  const pendingFocusRef = useRef(null);
+
+  useEffect(() => {
+    if (pendingFocusRef.current === null) return;
+    itemRefs.current[pendingFocusRef.current]?.focus();
+    pendingFocusRef.current = null;
+  }, [items]);
 
   // Düzenleme moduna geçerken formu notla doldur; çıkarken boşalt ve kapat.
   useEffect(() => {
@@ -57,12 +70,64 @@ export default function NoteForm({ editingNote = null, onNoteSaved, onCancelEdit
     );
   }
 
+  // Satır eklenip silindikten sonra, React yeni listeyi çizince imleci ilgili maddeye taşır.
+  function focusItemAfterRender(index) {
+    pendingFocusRef.current = index;
+  }
+
   function addItemRow() {
     setItems((current) => [...current, { text: '', is_done: false }]);
+    focusItemAfterRender(items.length);
   }
 
   function removeItemRow(index) {
     setItems((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  function changeNoteType(nextType) {
+    setNoteType(nextType);
+    setError('');
+  }
+
+  // Başlıkta Enter formu göndermez; içerik alanına ya da ilk maddeye geçer.
+  function handleTitleKeyDown(event) {
+    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    if (noteType === 'checklist' && !editingNote) itemRefs.current[0]?.focus();
+    else contentRef.current?.focus();
+  }
+
+  // Maddede Enter altına yeni madde açar; boş maddede Backspace onu siler.
+  function handleItemKeyDown(event, index) {
+    if (event.nativeEvent.isComposing) return;
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      setItems((current) => [
+        ...current.slice(0, index + 1),
+        { text: '', is_done: false },
+        ...current.slice(index + 1),
+      ]);
+      focusItemAfterRender(index + 1);
+    } else if (event.key === 'Backspace' && items[index].text === '' && items.length > 1) {
+      event.preventDefault();
+      removeItemRow(index);
+      focusItemAfterRender(Math.max(index - 1, 0));
+    }
+  }
+
+  // API'ye gidecek gövde: not türü her zaman açıkça gönderilir.
+  function buildNoteBody() {
+    if (noteType === 'checklist') {
+      return {
+        title,
+        color,
+        note_type: 'checklist',
+        checklist_items: items
+          .map((item) => ({ ...item, text: item.text.trim() }))
+          .filter((item) => item.text),
+      };
+    }
+    return { title, content, color, note_type: 'text' };
   }
 
   function handleCancel() {
@@ -78,20 +143,15 @@ export default function NoteForm({ editingNote = null, onNoteSaved, onCancelEdit
     setIsSubmitting(true);
     try {
       const isChecklist = noteType === 'checklist';
-      const body = isChecklist
-        ? {
-            title,
-            color,
-            checklist_items: items
-              .map((item) => ({ ...item, text: item.text.trim() }))
-              .filter((item) => item.text),
-          }
-        : { title, content, color };
 
-      // Düzenlemede liste notunun maddeleri değiştirilemez (5. kişinin işi).
+      // Düzenlemede not türü değişmez, liste maddeleri de buradan değiştirilmez
+      // (5. kişinin işi); yalnızca başlık, içerik ve renk gönderilir.
       const savedNote = editingNote
-        ? await updateNote(editingNote.id, isChecklist ? { title, color } : body)
-        : await createNote(body);
+        ? await updateNote(
+            editingNote.id,
+            isChecklist ? { title, color } : { title, content, color },
+          )
+        : await createNote(buildNoteBody());
 
       onNoteSaved?.(savedNote);
       if (!editingNote) {
@@ -114,11 +174,16 @@ export default function NoteForm({ editingNote = null, onNoteSaved, onCancelEdit
   }
 
   return (
-    <form className="note-form" onSubmit={handleSubmit}>
+    <form
+      className="note-form"
+      onSubmit={handleSubmit}
+      style={{ '--note-bg': noteColor(color) }}
+    >
       <input
         className="note-form__title"
         value={title}
         onChange={(event) => setTitle(event.target.value)}
+        onKeyDown={handleTitleKeyDown}
         placeholder="Başlık"
       />
 
@@ -126,7 +191,7 @@ export default function NoteForm({ editingNote = null, onNoteSaved, onCancelEdit
         <button
           type="button"
           className={noteType === 'text' ? 'is-active' : ''}
-          onClick={() => setNoteType('text')}
+          onClick={() => changeNoteType('text')}
           disabled={Boolean(editingNote)}
         >
           Metin
@@ -134,7 +199,7 @@ export default function NoteForm({ editingNote = null, onNoteSaved, onCancelEdit
         <button
           type="button"
           className={noteType === 'checklist' ? 'is-active' : ''}
-          onClick={() => setNoteType('checklist')}
+          onClick={() => changeNoteType('checklist')}
           disabled={Boolean(editingNote)}
         >
           Liste
@@ -157,8 +222,12 @@ export default function NoteForm({ editingNote = null, onNoteSaved, onCancelEdit
               <li key={index} className="note-form__item">
                 <span className="note-form__checkbox" aria-hidden="true" />
                 <input
+                  ref={(element) => {
+                    itemRefs.current[index] = element;
+                  }}
                   value={item.text}
                   onChange={(event) => setItemText(index, event.target.value)}
+                  onKeyDown={(event) => handleItemKeyDown(event, index)}
                   placeholder="Madde ekle"
                 />
                 <button
@@ -181,6 +250,7 @@ export default function NoteForm({ editingNote = null, onNoteSaved, onCancelEdit
         )
       ) : (
         <textarea
+          ref={contentRef}
           className="note-form__content"
           value={content}
           onChange={(event) => setContent(event.target.value)}
