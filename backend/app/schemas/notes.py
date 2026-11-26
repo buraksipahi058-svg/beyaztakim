@@ -40,3 +40,16 @@ class NoteUpdate(BaseModel):
     content: str | None = None
     color: str | None = Field(default=None, max_length=NOTE_COLOR_MAX_LENGTH)
     is_pinned: bool | None = None
+
+
+NOTE_POSITION_MAX = 20000
+
+
+class NotePositionUpdate(BaseModel):
+    """Ana sayfa tuvalindeki konum isteği gövdesi (PATCH /notes/{note_id}/position).
+
+    Değerler piksel cinsindendir ve 0 ile NOTE_POSITION_MAX arasında olmalıdır.
+    """
+
+    position_x: int = Field(ge=0, le=NOTE_POSITION_MAX)
+    position_y: int = Field(ge=0, le=NOTE_POSITION_MAX)

@@ -78,6 +78,9 @@ class Note(Base):
     is_trashed: Mapped[bool] = mapped_column(Boolean, default=False)
     trashed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reminder_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Ana sayfa tuvalindeki konum (piksel). Boş = henüz yerleştirilmemiş.
+    position_x: Mapped[int | None] = mapped_column(Integer)
+    position_y: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
