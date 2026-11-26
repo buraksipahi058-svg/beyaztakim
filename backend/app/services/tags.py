@@ -59,6 +59,24 @@ def delete_tag(db: Session, user: User, tag_id: int) -> None:
     db.commit()
 
 
+def update_tag_position(
+    db: Session, user: User, tag_id: int, position_x: int, position_y: int
+) -> Tag:
+    """Etiketin destesini ana sayfa tuvalinde yeni konuma taşır.
+
+    Etiket yoksa ya da başka kullanıcınınsa NotFoundError (404) fırlatır.
+    """
+    tag = db.scalar(select(Tag).where(Tag.id == tag_id, Tag.user_id == user.id))
+    if tag is None:
+        raise NotFoundError("Etiket bulunamadı.")
+
+    tag.position_x = position_x
+    tag.position_y = position_y
+    db.commit()
+    db.refresh(tag)
+    return tag
+
+
 def add_tag_to_note(
     db: Session, user: User, note_id: int, tag_id: int
 ) -> None:

@@ -3,7 +3,7 @@
 // Ana sayfa. Notlar src/api/notes.js üzerinden gerçek API'den gelir; arşivdeki
 // ve çöp kutusundaki notlar API zaten döndürmez.
 // - Geniş ekranda notlar bir tuvalde (NoteCanvas) durur: sürüklenip bırakıldıkları
-//   yerde kalırlar.
+//   yerde kalırlar; "Etikete göre grupla" ile aynı etiketli notlar destelenir.
 // - 720 pikselden dar ekranda iki ızgarada gösterilir: "Sabitlenenler" ve
 //   "Diğerleri" (tuvaldeki konumlar korunur).
 
@@ -83,15 +83,7 @@ export default function HomePage() {
         <EmptyState icon="lightbulb" message="Eklediğiniz notlar burada görünür" />
       )}
 
-      {!isNarrowScreen && notes.length > 0 && (
-        <>
-          <p className="page-hint">
-            Notları sürükleyip istediğiniz yere bırakın. Tuvalin boş bir yerinden tutup
-            sürükleyerek tuvali kaydırabilirsiniz.
-          </p>
-          <NoteCanvas notes={notes} {...gridProps} />
-        </>
-      )}
+      {!isNarrowScreen && notes.length > 0 && <NoteCanvas notes={notes} {...gridProps} />}
 
       {isNarrowScreen && pinned.length > 0 && (
         <section className="note-section">

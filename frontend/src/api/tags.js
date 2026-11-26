@@ -23,6 +23,14 @@ export async function deleteTag(tagId) {
   notifyTagsChanged({ deletedTagId: tagId });
 }
 
+// Etiket destesinin ana sayfa tuvalindeki konumunu kaydeder; güncel etiketi döndürür.
+export function updateTagPosition(tagId, positionX, positionY) {
+  return apiRequest(`/tags/${tagId}/position`, {
+    method: 'PATCH',
+    body: { position_x: positionX, position_y: positionY },
+  });
+}
+
 // Nota etiket ekler (etiket zaten varsa bir şey değişmez).
 export function addTagToNote(noteId, tagId) {
   return apiRequest(`/tags/notes/${noteId}/tags/${tagId}`, { method: 'POST' });

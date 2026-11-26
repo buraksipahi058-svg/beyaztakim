@@ -56,10 +56,15 @@ export function canvasColumnCount(canvasWidth) {
   return Math.max(1, Math.floor((canvasWidth + CANVAS_GAP) / (CANVAS_CARD_WIDTH + CANVAS_GAP)));
 }
 
-// Konumu olmayan notlara, listedeki sırayla, sol üstten başlayarak ilk boş
-// ızgara hücresini verir. Konumu olan notların kapladığı yerler atlanır.
-// Döndürür: { [noteId]: { x, y } }
-export function placeUnpositionedNotes(notes, canvasWidth) {
+// Tuvaldeki öğelerin (not kartı / etiket destesi) anahtarları; numaraları çakışmasın diye türü içerir.
+export const noteKey = (noteId) => `note:${noteId}`;
+export const tagKey = (tagId) => `tag:${tagId}`;
+
+// Tuvaldeki öğelerden (notlar ya da desteler: { id, position_x, position_y })
+// konumu olmayanlara, listedeki sırayla, sol üstten başlayarak ilk boş ızgara
+// hücresini verir. Konumu olan öğelerin kapladığı yerler atlanır.
+// Döndürür: { [id]: { x, y } }
+export function placeUnpositionedItems(items, canvasWidth) {
   const columns = canvasColumnCount(canvasWidth);
   const cellAt = (slot) => ({
     x: (slot % columns) * (CANVAS_CARD_WIDTH + CANVAS_GAP),
@@ -67,25 +72,48 @@ export function placeUnpositionedNotes(notes, canvasWidth) {
     width: CANVAS_CARD_WIDTH,
     height: CANVAS_CELL_HEIGHT,
   });
-  const occupied = notes.filter(isPlaced).map((note) => ({
-    x: note.position_x,
-    y: note.position_y,
+  const occupied = items.filter(isPlaced).map((item) => ({
+    x: item.position_x,
+    y: item.position_y,
     width: CANVAS_CARD_WIDTH,
     height: CANVAS_CELL_HEIGHT,
   }));
 
   const placements = {};
   let slot = 0;
-  for (const note of notes) {
-    if (isPlaced(note)) continue;
+  for (const item of items) {
+    if (isPlaced(item)) continue;
     let cell = cellAt(slot);
     while (occupied.some((rect) => overlaps(cell, rect))) {
       slot += 1;
       cell = cellAt(slot);
     }
-    placements[note.id] = { x: cell.x, y: cell.y };
+    placements[item.id] = { x: cell.x, y: cell.y };
     occupied.push(cell);
     slot += 1;
   }
   return placements;
+}
+
+// Etikete göre desteler. `tags` listesindeki her etiket için o etiketi taşıyan
+// notlardan bir deste kurar; birden çok etiketi olan not her etiketin destesinde
+// yer alır. Etiket listesinde olmayan (ör. az önce silinmiş) etiketler sayılmaz.
+// Destede sabitlenmiş notlar, sonra en son değişenler üstte durur. Desteler
+// `tags` sırasıyla (backend'den ada göre sıralı) gelir.
+// Döndürür: { stacks: [{ tag, notes }], freeNotes } (freeNotes: hiçbir destede olmayan notlar)
+export function buildTagStacks(notes, tags) {
+  const notesByTag = new Map(tags.map((tag) => [tag.id, []]));
+  const freeNotes = [];
+  for (const note of notes) {
+    const stackTagIds = (note.tags ?? []).map((tag) => tag.id).filter((id) => notesByTag.has(id));
+    if (stackTagIds.length === 0) freeNotes.push(note);
+    for (const tagId of stackTagIds) notesByTag.get(tagId).push(note);
+  }
+
+  const pinnedThenNewest = (a, b) =>
+    Number(b.is_pinned) - Number(a.is_pinned) || new Date(b.updated_at) - new Date(a.updated_at);
+  const stacks = tags
+    .filter((tag) => notesByTag.get(tag.id).length > 0)
+    .map((tag) => ({ tag, notes: [...notesByTag.get(tag.id)].sort(pinnedThenNewest) }));
+  return { stacks, freeNotes };
 }
