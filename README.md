@@ -275,7 +275,20 @@ başlığını değiştirmeyin.
 
 ### 4. Arşiv ve Çöp Kutusu
 
-<!-- 4. kişi doldurur. -->
+Notlar silinmeden önce iki yere kaldırılabilir:
+
+- **Arşiv:** Not kartındaki arşiv düğmesi notu ana sayfadan kaldırıp sol
+  menüdeki **Arşiv** sayfasına taşır (sabitlemesi kalkar). Arşiv sayfasındaki
+  "Arşivden çıkar" düğmesi notu ana sayfaya geri getirir.
+- **Çöp kutusu:** Çöp düğmesi notu **Çöp Kutusu** sayfasına taşır. Çöpteki
+  notlar düzenlenemez; "Geri yükle" notu eski yerine (ana sayfa ya da arşiv)
+  döndürür, "Kalıcı olarak sil" onay sorup notu, maddeleri ve etiket bağlarıyla
+  birlikte siler. Yalnızca çöpteki not kalıcı silinebilir.
+
+Uç noktalar: `GET /archive`, `POST /archive/{id}` (arşivle),
+`DELETE /archive/{id}` (arşivden çıkar), `GET /trash`, `POST /trash/{id}`
+(çöpe taşı), `POST /trash/{id}/restore`, `DELETE /trash/{id}` (kalıcı sil).
+Ayrıntılar: [docs/fonksiyonlar.md](docs/fonksiyonlar.md#4-arşiv-ve-çöp-kutusu).
 
 ### 5. Liste Notları, Hatırlatıcı, Sabitleme, Renk
 

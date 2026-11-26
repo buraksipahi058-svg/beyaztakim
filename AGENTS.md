@@ -148,6 +148,7 @@ onayı olmadan main'e giremez (`.github/CODEOWNERS`).
 **Frontend**
 
 - `frontend/src/main.jsx`, `App.jsx`, `routes.js`, `index.css`
+- `frontend/src/hooks/` (ör. `useNoteList.js`: not listesi gösteren sayfalar için ortak kanca)
 - `frontend/src/api/client.js`, `frontend/src/api/health.js`
 - `frontend/src/components/`: `Layout.jsx`, `Layout.css`, `PageTransition.jsx`,
   `ApiStatus.jsx`, `EmptyState.jsx`, `Icon.jsx`, `noteColors.js`
@@ -169,8 +170,8 @@ Yollar `backend/app/`, `backend/tests/` ve `frontend/src/` altındadır.
 
 | Kişi | Backend | Frontend |
 |---|---|---|
-| **1. Kullanıcı ve Güvenlik** (`/auth`) | `routers/auth.py`, `services/auth.py`, `schemas/auth.py`, `tests/test_auth.py`, `dependencies.py` içindeki `get_current_user` | `pages/LoginPage.jsx`, `pages/RegisterPage.jsx`, `components/RequireAuth.jsx`, `components/UserMenu.jsx`, `api/auth.js`, `api/authSession.js` |
-| **2. Not İşlemleri** (`/notes`) | `routers/notes.py`, `services/notes.py`, `schemas/notes.py`, `tests/test_notes.py` | `pages/HomePage.jsx`, `components/NoteCard.jsx`, `NoteCard.css`, `NoteGrid.jsx`, `NoteForm.jsx`, `api/notes.js`, `api/sampleNotes.js` |
+| **1. Kullanıcı ve Güvenlik** (`/auth`) | `routers/auth.py`, `services/auth.py`, `schemas/auth.py`, `tests/test_auth.py`, `dependencies.py` içindeki `get_current_user` | `pages/LoginPage.jsx`, `pages/RegisterPage.jsx`, `components/AuthPages.jsx` (+`.css`), `components/RequireAuth.jsx`, `components/UserMenu.jsx` (+`.css`), `api/auth.js`, `api/authSession.js` |
+| **2. Not İşlemleri** (`/notes`) | `routers/notes.py`, `services/notes.py`, `schemas/notes.py`, `tests/test_notes.py` | `pages/HomePage.jsx`, `components/NoteCard.jsx` (+`.css`), `NoteGrid.jsx`, `NoteForm.jsx` (+`.css`), `api/notes.js` |
 | **3. Etiket ve Arama** (`/tags`, `/search`) | `routers/tags.py`, `services/tags.py`, `schemas/tags.py`, `tests/test_tags.py`, `routers/search.py`, `services/search.py`, `tests/test_search.py` | `pages/SearchPage.jsx`, `components/SearchBar.jsx`, `components/TagMenu.jsx`, `components/note-card/NoteTags.jsx` (+`.css`), `api/tags.js`, `api/search.js` |
 | **4. Arşiv ve Çöp Kutusu** (`/archive`, `/trash`) | `routers/archive.py`, `services/archive.py`, `tests/test_archive.py`, `routers/trash.py`, `services/trash.py`, `tests/test_trash.py` | `pages/ArchivePage.jsx`, `pages/TrashPage.jsx`, `components/note-card/ArchiveTrashActions.jsx`, `api/archive.js`, `api/trash.js` |
 | **5. Liste Notları, Hatırlatıcı, Sabitleme, Renk** (`/checklist`, `/reminders`, `/pin-color`) | `routers/`, `services/`, `schemas/` altında `checklist.py`, `reminders.py`, `pin_color.py`; `tests/test_checklist.py`, `test_reminders.py`, `test_pin_color.py` | `pages/RemindersPage.jsx`, `components/note-card/ChecklistItems.jsx` (+`.css`), `PinColorActions.jsx`, `ReminderChip.jsx`, `api/checklist.js`, `api/reminders.js`, `api/pinColor.js` |
@@ -206,8 +207,10 @@ Not kartındaki her yer aynı bilgileri alır:
 | `onNoteChange(guncelNot)` | Not değişince (ör. renk, sabitleme) güncel notla çağır; liste güncellenir |
 | `onNoteRemove(noteId)` | Not bu listeden çıkınca (ör. arşivlendi, çöpe taşındı) çağır; kart kaybolur |
 
-Ana sayfa, notlar API'si yazılana kadar örnek veriyle çalışır; düğmelerini
-API'yi beklemeden bu örnek notlar üzerinde deneyebilirsin.
+Kart üzerindeki küçük ikon düğmeleri için ortak `icon-button note-action`
+sınıflarını kullan (`index.css`); işlem hatası için `note-action-error`.
+Not listesi gösteren yeni bir sayfa yazıyorsan `hooks/useNoteList.js`
+kancası yüklemeyi ve kart olaylarını hazır getirir.
 
 ## Dil
 
