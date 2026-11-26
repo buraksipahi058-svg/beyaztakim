@@ -716,20 +716,83 @@ maddeleri ve etiket bağları da silinir; etiketlerin kendisi kalır.
 - **Uç nokta önekleri:** `/checklist`, `/reminders`, `/pin-color`
 - **Dosyalar:** bkz. [AGENTS.md > Dosya sahipliği](../AGENTS.md#dosya-sahipliği)
 
-### Hazır yer tutucular
+Kurallar:
 
-| Fonksiyon | Dosya | Ne yapar | Girdi | Çıktı | Hata durumları |
-|---|---|---|---|---|---|
-| `ChecklistItems` | frontend/src/components/note-card/ChecklistItems.jsx | Liste notunun maddeleri. Şimdilik maddeleri sadece gösterir (işaretliler üstü çizili). | `{ note, onNoteChange, onNoteRemove }` | Madde listesi | — |
-| `PinColorActions` | frontend/src/components/note-card/PinColorActions.jsx | Not kartındaki sabitleme ve renk düğmelerinin yeri. Şimdilik boş. | `{ note, onNoteChange, onNoteRemove }` | `null` | — |
-| `ReminderChip` | frontend/src/components/note-card/ReminderChip.jsx | Not kartındaki hatırlatıcının yeri. Şimdilik boş. | `{ note, onNoteChange, onNoteRemove }` | `null` | — |
-| `RemindersPage` | frontend/src/pages/RemindersPage.jsx | `/reminders` sayfası (menüde "Hatırlatıcılar"). Şimdilik boş durum yazısı. | — | "Yaklaşan hatırlatıcılarınız burada görünür" | — |
+- Renk ve sabitleme iki yoldan da değiştirilebilir: buradaki `/pin-color` uç
+  noktaları ve `PATCH /notes/{note_id}` (2. kişi). İkisi de aynı renk
+  listesini kullanır ve geçerlidir.
+- Hatırlatıcı zamanı saat dilimiyle gönderilir, UTC olarak saklanır ve
+  gelecekte olmalıdır. Çöpteki nota hatırlatıcı atanamaz.
+- Çöpteki notlarda liste maddeleri, hatırlatıcı, renk ve sabitleme
+  değiştirilemez (arayüzde düğmeler gizlenir).
 
 ### Fonksiyonlar
 
-> Not: Renk ve sabitleme iki yoldan da değiştirilebilir: buradaki
-> `/pin-color` uç noktaları ve `PATCH /notes/{note_id}` (2. kişi). İkisi de
-> aynı renk listesini kullanır ve geçerlidir.
+#### `set_reminder`
+
+- **Sorumlu kişi:** 5. kişi
+- **Dosya:** backend/app/services/reminders.py
+- **Uç nokta:** PUT /reminders/{note_id} → 200 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Nota hatırlatıcı atar ya da var olanın zamanını değiştirir.
+Zaman UTC'ye çevrilip `reminder_at`'e yazılır.
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Notun sahibi (`get_current_user` verir) |
+| `note_id` | `int` | Evet | Yoldan gelen not kimliği |
+| `reminder_at` | `datetime` (saat dilimli) | Evet | Gövdeden: `ReminderUpdate.reminder_at`, ör. `"2026-12-01T09:00:00Z"` |
+
+**Çıktı:** `Note` (güncel hali)
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Zaman şimdiden önce ya da şimdi | `ValidationError` | 400 |
+| Not çöp kutusunda | `ValidationError` | 400 |
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Tarihte saat dilimi yok ya da biçim hatalı | (Pydantic) | 422 |
+
+#### `clear_reminder`
+
+- **Sorumlu kişi:** 5. kişi
+- **Dosya:** backend/app/services/reminders.py
+- **Uç nokta:** DELETE /reminders/{note_id} → 200 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Notun hatırlatıcısını kaldırır (`reminder_at: null`). Hatırlatıcı
+yoksa bir şey değişmez.
+
+**Girdi:** `db: Session`, `user: User`, `note_id: int`
+
+**Çıktı:** `Note` (güncel hali)
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+
+#### `list_upcoming_reminders`
+
+- **Sorumlu kişi:** 5. kişi
+- **Dosya:** backend/app/services/reminders.py
+- **Uç nokta:** GET /reminders → 200 `list[NoteRead]`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Zamanı henüz gelmemiş hatırlatıcısı olan notları en yakın zaman
+üstte olacak şekilde döndürür. Çöpteki notlar dahil edilmez, arşivdekiler edilir.
+
+**Girdi:** `db: Session`, `user: User`
+
+**Çıktı:** `list[Note]`
+
+**Hata durumları:** —
 
 #### `update_note_pin`
 
@@ -893,6 +956,40 @@ gönderilmeyen alanlar olduğu gibi kalır.
 | `add_item` | backend/app/routers/checklist.py | POST /checklist/{note_id}/items | Gövde: `{ "text": str }`. Liste notuna madde ekler. | 201 `ChecklistItemRead` | 400 / 401 / 404 / 422 |
 | `update_item` | backend/app/routers/checklist.py | PATCH /checklist/items/{item_id} | Gövde: `{ "text"?: str, "is_done"?: bool }`. Maddeyi günceller. | 200 `ChecklistItemRead` | 401 / 404 / 422 |
 | `delete_item` | backend/app/routers/checklist.py | DELETE /checklist/items/{item_id} | Maddeyi siler. | 204 (boş) | 401 / 404 |
+| `list_upcoming_reminders` | backend/app/routers/reminders.py | GET /reminders | Yaklaşan hatırlatıcıları listeler. | 200 `list[NoteRead]` | 401 |
+| `set_reminder` | backend/app/routers/reminders.py | PUT /reminders/{note_id} | Gövde: `{ "reminder_at": "...Z" }`. Hatırlatıcı atar. | 200 `NoteRead` | 400 / 401 / 404 / 422 |
+| `clear_reminder` | backend/app/routers/reminders.py | DELETE /reminders/{note_id} | Hatırlatıcıyı kaldırır. | 200 `NoteRead` | 401 / 404 |
+
+### Frontend
+
+| Fonksiyon | Dosya | Ne yapar | Girdi | Çıktı | Hata durumları |
+|---|---|---|---|---|---|
+| `addChecklistItem` | frontend/src/api/checklist.js | POST /checklist/{noteId}/items çağırır. | `noteId: number`, `text: string` | `Promise<ChecklistItem>` | 400 / 404 / 422 / 401 → `ApiError` |
+| `updateChecklistItem` | frontend/src/api/checklist.js | PATCH /checklist/items/{itemId} çağırır. | `itemId: number`, `changes: { text?, is_done? }` | `Promise<ChecklistItem>` | 404 / 422 / 401 → `ApiError` |
+| `deleteChecklistItem` | frontend/src/api/checklist.js | DELETE /checklist/items/{itemId} çağırır. | `itemId: number` | `Promise<null>` | 404 / 401 → `ApiError` |
+| `setNotePinned` | frontend/src/api/pinColor.js | PATCH /pin-color/{noteId}/pin çağırır. | `noteId: number`, `isPinned: boolean` | `Promise<Note>` | 404 / 401 → `ApiError` |
+| `setNoteColor` | frontend/src/api/pinColor.js | PATCH /pin-color/{noteId}/color çağırır. | `noteId: number`, `color: string` | `Promise<Note>` | 400 / 404 / 401 → `ApiError` |
+| `listUpcomingReminders` | frontend/src/api/reminders.js | GET /reminders çağırır. | — | `Promise<Note[]>` | 401 → `ApiError` |
+| `setReminder` | frontend/src/api/reminders.js | PUT /reminders/{noteId} çağırır; tarihi UTC (`toISOString`) gönderir. | `noteId: number`, `date: Date` | `Promise<Note>` | 400 / 404 / 401 → `ApiError` |
+| `clearReminder` | frontend/src/api/reminders.js | DELETE /reminders/{noteId} çağırır. | `noteId: number` | `Promise<Note>` | 404 / 401 → `ApiError` |
+| `ChecklistItems` | frontend/src/components/note-card/ChecklistItems.jsx | Liste notunun maddeleri: kutuyu işaretleme, maddeyi silme, alttaki alandan madde ekleme. Çöpteki notta yalnızca gösterir. | `{ note, onNoteChange }` | Madde listesi ve ekleme alanı | API hatası kartta yazı olarak gösterilir |
+| `replaceItems` | ChecklistItems.jsx (içinde) | Güncel madde listesiyle `onNoteChange` çağırır. | `nextItems: ChecklistItem[]` | — | — |
+| `runAction` | ChecklistItems.jsx (içinde) | İşlemi çalıştırır, hatayı yakalayıp gösterir. | `action: () => Promise` | `Promise<void>` | Hata mesajı gösterir |
+| `handleToggle` | ChecklistItems.jsx (içinde) | Maddenin işaretini tersine çevirir. | `item: ChecklistItem` | — | — |
+| `handleDelete` | ChecklistItems.jsx (içinde) | Maddeyi siler. | `item: ChecklistItem` | — | — |
+| `handleAdd` | ChecklistItems.jsx (içinde) | Yazılan metinle listenin sonuna madde ekler. | `event` | — | — |
+| `PinColorActions` | frontend/src/components/note-card/PinColorActions.jsx | Kartın alt çubuğunda zil (hatırlatıcı kutusu), palet (renk) ve raptiye (sabitle; arşivdeki notta yok) düğmeleri. Çöpteki notta gösterilmez. | `{ note, onNoteChange }` | Düğmeler ve açılır kutular | API hatası kartta yazı olarak gösterilir |
+| `runAction` | PinColorActions.jsx (içinde) | Kutuyu kapatıp işlemi çalıştırır; dönen notla `onNoteChange` çağırır. | `action: () => Promise<Note>` | `Promise<void>` | Hata mesajı gösterir |
+| `togglePanel` | PinColorActions.jsx (içinde) | Renk ya da hatırlatıcı kutusunu açar/kapatır. | `panel: 'color' \| 'reminder'` | — | — |
+| `ReminderPicker` | frontend/src/components/note-card/ReminderPicker.jsx | Hatırlatıcı seçme kutusu: hazır seçenekler (bugün 20:00, yarın 09:00, gelecek hafta 09:00) ya da tarih-saat seçimi; geçmiş zaman kaydedilemez. | `{ note, onSave(date: Date) }` | Açılır kutu | — |
+| `ReminderChip` | frontend/src/components/note-card/ReminderChip.jsx | Hatırlatıcı zamanını rozet olarak gösterir ("27 Kas 09:00"); geçmişse üstü çizili. Çarpı hatırlatıcıyı kaldırır (çöpteki notta yok). | `{ note, onNoteChange }` | Rozet; hatırlatıcı yoksa `null` | Hata mesajı gösterir |
+| `handleClear` | ReminderChip.jsx (içinde) | Hatırlatıcıyı kaldırır. | — | `Promise<void>` | Hata mesajı gösterir |
+| `formatReminder` | frontend/src/components/note-card/reminderTime.js | Tarihi "27 Kas 09:00" biçiminde yerel saatle yazar. | `dateValue: string \| Date` | `string` | — |
+| `isPastReminder` | reminderTime.js | Zamanın geçip geçmediğini söyler. | `dateValue`, `now = new Date()` | `boolean` | — |
+| `toLocalInputValue` | reminderTime.js | `datetime-local` alanı için yerel "YYYY-MM-DDTHH:mm" üretir. | `date: Date` | `string` | — |
+| `quickReminderOptions` | reminderTime.js | Hazır hatırlatıcı seçeneklerini üretir (bugün 20:00 yalnızca henüz geçmediyse). | `now = new Date()` | `{ label, date }[]` | — |
+| `RemindersPage` | frontend/src/pages/RemindersPage.jsx | `/reminders` sayfası: yaklaşan hatırlatıcısı olan notlar; hatırlatıcısı kaldırılan not listeden çıkar. | — | Not ızgarası; yükleme/hata/boş durum yazıları | Liste yüklenemezse hata yazısı |
+| `handleReminderNoteChange` | RemindersPage.jsx (içinde) | Not değişince: hatırlatıcısı varsa günceller, yoksa listeden çıkarır. | `updatedNote: Note` | — | — |
 
 ---
 
@@ -941,6 +1038,7 @@ Giriş sistemi gelince yalnızca içi değişir; adı ve dönüş tipi aynı kal
 | `create_tables` | app/database.py | Modellerdeki tabloları (yoksa) oluşturur. | `bind: Engine \| None = None` | `None` | — |
 | `get_db` | app/database.py | İstek başına veritabanı oturumu açar, istek bitince kapatır. Router'larda `db: DbSession` ile kullanılır. | — | `Iterator[Session]` | — |
 | `utc_now` | app/models.py | Şu anki zamanı UTC olarak verir (tarih alanlarının varsayılanı). | — | `datetime` | — |
+| `as_utc` (ve `UtcDatetime` tipi) | app/schemas/common.py | Tarihi UTC saat dilimiyle işaretler; SQLite'tan saat dilimsiz okunan tarihler JSON'da `Z` ile gider. Ortak okuma şemalarındaki tüm tarih alanları bu tipi kullanır. | `value: datetime` | `datetime` (UTC) | — |
 | `discover_routers` | app/routers/\_\_init\_\_.py | `app/routers` altındaki her modülün `router` nesnesini bulur; `_` ile başlayanları atlar. | `package: ModuleType \| None = None` | `list[APIRouter]` (modül adına göre sıralı) | — |
 | `ServiceError` ve alt sınıfları | app/services/errors.py | Servis hataları: `ValidationError`, `PermissionDeniedError`, `NotFoundError`, `ConflictError`. | `message: str` | İstisna (`status_code`: 400 / 403 / 404 / 409) | — |
 | `seed_database` | app/seed.py | Örnek kullanıcıyı, etiketleri ve 4 örnek notu ekler. Tekrar çalıştırılınca var olanları yeniden eklemez (notlar başlığa göre eşleşir). | `db: Session` | `User` (örnek kullanıcı) | — |
@@ -971,6 +1069,8 @@ Giriş sistemi gelince yalnızca içi değişir; adı ve dönüş tipi aynı kal
 | `useNoteList` | src/hooks/useNoteList.js | Not listesi gösteren sayfalar için ortak kanca: listeyi yükler, yükleme/hata durumunu tutar, kart olaylarını listeye uygular. | `loadNotes: () => Promise<Note[]>`, `deps: any[] = []` (değişince yeniden yükler) | `{ notes, isLoading, loadError, handleNoteChange, handleNoteRemove }` | Yükleme başarısızsa `loadError`'a mesaj yazar |
 | `handleNoteChange` | src/hooks/useNoteList.js (useNoteList içinde) | Listedeki notu güncel haliyle değiştirir. | `updatedNote: Note` | — | — |
 | `handleNoteRemove` | src/hooks/useNoteList.js (useNoteList içinde) | Notu listeden çıkarır. | `noteId: number` | — | — |
+| `useDismiss` | src/hooks/useDismiss.js | Açılır kutular için: verilen öğenin dışına tıklanınca ya da Esc'de `onClose` çağırır; kutu kapalıyken dinlemez. | `ref`, `onClose()`, `isOpen = true` | — | — |
+| `handlePointerDown` / `handleKeyDown` | src/hooks/useDismiss.js (içinde) | Dışarı tıklamayı / Esc tuşunu yakalar. | `event` | — | — |
 ## 1. Kullanıcı ve Güvenlik
 
 - **Sorumlu kişi:** 1. kişi

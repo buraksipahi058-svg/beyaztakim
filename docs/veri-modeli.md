@@ -145,6 +145,15 @@ bir etiketin birden çok notu olabilir.
 SQLite'ta yabancı anahtar kısıtları `database.py` içinde her bağlantıda açılır
 (`PRAGMA foreign_keys=ON`).
 
+## Tarih ve saatler
+
+Tüm tarih alanları (`created_at`, `updated_at`, `trashed_at`, `reminder_at`)
+**UTC** olarak saklanır. SQLite saat dilimini saklamadığı için okunan değerler
+saat dilimsizdir; API yanıtlarında ortak `UtcDatetime` tipi bunları UTC olarak
+işaretler (ör. `"2026-12-01T06:00:00Z"`). Tarayıcı bu değeri kullanıcının yerel
+saatine çevirerek gösterir. API'ye tarih gönderilirken saat dilimi yazılmalıdır
+(`Z` ya da `+03:00`).
+
 ## Erişim kuralı
 
 Bir kullanıcı yalnızca kendi kayıtlarını görebilir ve değiştirebilir. Servisler
