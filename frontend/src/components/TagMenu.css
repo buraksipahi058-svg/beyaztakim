@@ -1,0 +1,22 @@
+/* Sahibi: 3. kişi (Etiket ve Arama) */
+
+/* "Etiketleri düzenle" bir düğme ama menü bağlantılarıyla aynı görünür. */
+.tag-menu__edit {
+  width: calc(100% - 12px);
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.layout--collapsed .tag-menu__edit {
+  width: calc(100% - 24px);
+}
+
+@media (max-width: 720px) {
+  .tag-menu__edit,
+  .layout--collapsed .tag-menu__edit {
+    width: calc(100% - 16px);
+  }
+}

@@ -271,7 +271,23 @@ başlığını değiştirmeyin.
 
 ### 3. Etiket ve Arama
 
-<!-- 3. kişi doldurur. -->
+- **Etiketler:** Sol menüdeki **Etiketleri düzenle** penceresinden etiket
+  oluşturulur ve silinir (silinen etiket notlardan da kalkar, notlar silinmez).
+  Bir kartın üzerine gelince görünen **Etiket** düğmesi etiket seçme kutusunu
+  açar; buradan var olan etiketler işaretlenir ya da yazılan adla yeni etiket
+  oluşturulur. Rozetteki çarpı etiketi nottan çıkarır. Aynı adda iki etiket
+  oluşturulamaz.
+- **Etikete göre filtreleme:** Sol menüde bir etikete tıklayınca o etiketi
+  taşıyan notlar listelenir.
+- **Arama:** Üst çubuktaki kutuya yazmayı bırakınca sonuçlar gelir. Arama
+  başlıkta, içerikte ve liste maddelerinde yapılır; büyük/küçük harf ve Türkçe
+  i/ı farkı gözetilmez ("ışık" yazınca "IŞIK" bulunur). Çöpteki notlar
+  aranmaz, arşivdekiler aranır. Etiket seçiliyken yazılan sözcük ikisine de
+  uyan notları getirir.
+
+Uç noktalar: `GET/POST /tags`, `DELETE /tags/{id}`,
+`POST/DELETE /tags/notes/{note_id}/tags/{tag_id}`, `GET /search?q=&tag_id=`.
+Ayrıntılar: [docs/fonksiyonlar.md](docs/fonksiyonlar.md#3-etiket-ve-arama).
 
 ### 4. Arşiv ve Çöp Kutusu
 

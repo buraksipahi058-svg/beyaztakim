@@ -262,14 +262,12 @@ içleri gerçek API ile çalışacak şekilde dolduruldu (durum: Tamamlandı).
 - **Uç nokta önekleri:** `/tags`, `/search`
 - **Dosyalar:** bkz. [AGENTS.md > Dosya sahipliği](../AGENTS.md#dosya-sahipliği)
 
-### Hazır yer tutucular
+Kurallar:
 
-| Fonksiyon | Dosya | Ne yapar | Girdi | Çıktı | Hata durumları |
-|---|---|---|---|---|---|
-| `NoteTags` | frontend/src/components/note-card/NoteTags.jsx | Not kartındaki etiket rozetleri. Şimdilik etiketleri sadece gösterir. | `{ note, onNoteChange, onNoteRemove }` | Etiket rozetleri; etiket yoksa `null` | — |
-| `SearchBar` | frontend/src/components/SearchBar.jsx | Üst çubuktaki arama kutusunun yeri. Şimdilik boş. | — | `null` | — |
-| `TagMenu` | frontend/src/components/TagMenu.jsx | Sol menüdeki etiket listesinin yeri. Şimdilik boş. | `{ collapsed: boolean }` | `null` | — |
-| `SearchPage` | frontend/src/pages/SearchPage.jsx | `/search` sayfası (menüde görünmez). Şimdilik boş durum yazısı. | — | "Arama sonuçları burada görünür" | — |
+- Arama çöpteki notları getirmez, arşivdekileri getirir.
+- Arama büyük/küçük harfe ve Türkçe i/ı farkına bakmaz ("ışık" → "IŞIK"),
+  başlık, içerik ve liste maddelerinde arar.
+- Sözcük ve etiket birlikte verilirse ikisine de uyan notlar döner.
 
 ### Fonksiyonlar
 
@@ -378,6 +376,68 @@ yoksa bir şey değişmez.
 | Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
 | Etiket yok ya da başka kullanıcının | `NotFoundError` | 404 |
 
+#### `search_notes`
+
+- **Sorumlu kişi:** 3. kişi
+- **Dosya:** backend/app/services/search.py
+- **Uç nokta:** GET /search?q=&tag_id= → 200 `list[NoteRead]`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcının çöpte olmayan notlarında (arşivdekiler dahil) arar.
+`query` başlık, içerik ya da liste maddelerinde geçmelidir (büyük/küçük harf ve
+Türkçe i/ı farkı gözetilmez). `tag_id` verilirse yalnızca o etiketi taşıyan
+notlar döner; ikisi birlikte verilirse ikisine de uymalıdır. Sıralama:
+sabitlenenler üste, sonra en son güncellenenler.
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Notların sahibi (`get_current_user` verir) |
+| `query` | `str \| None` | Hayır | Aranan sözcük (en fazla 100 karakter) |
+| `tag_id` | `int \| None` | Hayır | Etiket filtresi |
+
+**Çıktı:** `list[Note]`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Ne sözcük ne etiket verilmiş | `ValidationError` | 400 |
+| Etiket yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Sözcük 100 karakterden uzun | (FastAPI) | 422 |
+
+#### `normalize_text`
+
+- **Sorumlu kişi:** 3. kişi
+- **Dosya:** backend/app/services/search.py
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Metni karşılaştırma için sadeleştirir: küçük harfe çevirir,
+"İ"deki noktayı ve ı/i farkını kaldırır ("IŞIK", "ışık" → "işik").
+
+**Girdi:** `text: str`
+
+**Çıktı:** `str`
+
+**Hata durumları:** —
+
+#### `_note_matches`
+
+- **Sorumlu kişi:** 3. kişi
+- **Dosya:** backend/app/services/search.py
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Sözcüğün notun başlığında, içeriğinde ya da liste maddelerinden
+birinde geçip geçmediğini söyler.
+
+**Girdi:** `note: Note`, `normalized_query: str`
+
+**Çıktı:** `bool`
+
+**Hata durumları:** —
+
 ### Uç noktalar (router)
 
 | Fonksiyon | Dosya | Uç nokta | Ne yapar | Çıktı | Hata durumları |
@@ -387,6 +447,39 @@ yoksa bir şey değişmez.
 | `delete_tag` | backend/app/routers/tags.py | DELETE /tags/{tag_id} | Etiketi siler. | 204 (boş) | 401 / 404 |
 | `add_tag_to_note` | backend/app/routers/tags.py | POST /tags/notes/{note_id}/tags/{tag_id} | Nota etiket ekler. | 204 (boş) | 401 / 404 |
 | `remove_tag_from_note` | backend/app/routers/tags.py | DELETE /tags/notes/{note_id}/tags/{tag_id} | Etiketi nottan çıkarır. | 204 (boş) | 401 / 404 |
+| `search_notes` | backend/app/routers/search.py | GET /search?q=&tag_id= | Notlarda arar; `q` en fazla 100 karakter. | 200 `list[NoteRead]` | 400 / 401 / 404 / 422 |
+
+### Frontend
+
+| Fonksiyon | Dosya | Ne yapar | Girdi | Çıktı | Hata durumları |
+|---|---|---|---|---|---|
+| `listTags` | frontend/src/api/tags.js | GET /tags çağırır. | — | `Promise<Tag[]>` | 401 → `ApiError` |
+| `createTag` | frontend/src/api/tags.js | POST /tags çağırır, sonra `notifyTagsChanged()`. | `name: string` | `Promise<Tag>` | 409 / 422 / 401 → `ApiError` |
+| `deleteTag` | frontend/src/api/tags.js | DELETE /tags/{id} çağırır, sonra `notifyTagsChanged({ deletedTagId })`. | `tagId: number` | `Promise<void>` | 404 / 401 → `ApiError` |
+| `addTagToNote` | frontend/src/api/tags.js | POST /tags/notes/{noteId}/tags/{tagId} çağırır. | `noteId: number`, `tagId: number` | `Promise<null>` | 404 / 401 → `ApiError` |
+| `removeTagFromNote` | frontend/src/api/tags.js | DELETE /tags/notes/{noteId}/tags/{tagId} çağırır. | `noteId: number`, `tagId: number` | `Promise<null>` | 404 / 401 → `ApiError` |
+| `notifyTagsChanged` | frontend/src/api/tags.js | Etiket listesi değişti olayını yayınlar. | `detail = {}` (silmede `{ deletedTagId }`) | — | — |
+| `onTagsChanged` | frontend/src/api/tags.js | Etiket listesi değişince çağrılacak fonksiyonu kaydeder. | `callback(detail)` | Kaydı silen fonksiyon | — |
+| `searchNotes` | frontend/src/api/search.js | GET /search çağırır. | `{ query = '', tagId = null }` | `Promise<Note[]>` | 400 / 404 / 401 → `ApiError` |
+| `SearchBar` | frontend/src/components/SearchBar.jsx | Üst çubuktaki arama kutusu: yazmayı bırakınca (300 ms) ya da Enter'da `/search?q=` açar; arama sayfasındaki etiket filtresini korur; çarpı ana sayfaya döner. | — | Arama kutusu | — |
+| `submitSearch` | SearchBar.jsx (içinde) | Adresi `/search?q=...` yapar (arama sayfasındayken geçmişe yeni kayıt eklemez). | `text: string` | — | — |
+| `handleSubmit` | SearchBar.jsx (içinde) | Enter'a basılınca hemen arar. | `event` | — | — |
+| `handleClear` | SearchBar.jsx (içinde) | Kutuyu temizler, ana sayfaya döner. | — | — | — |
+| `TagMenu` | frontend/src/components/TagMenu.jsx | Sol menüdeki etiketler (tıklanınca `/search?tag=id`) ve "Etiketleri düzenle" düğmesi; etiketler değişince listeyi yeniler. | — | Menü öğeleri, gerekirse düzenleme penceresi | Liste yüklenemezse boş liste |
+| `loadTags` | TagMenu.jsx (içinde) | Etiketleri API'den yükler. | — | — | Hata olursa listeyi boşaltır |
+| `TagEditDialog` | frontend/src/components/TagEditDialog.jsx | "Etiketleri düzenle" penceresi: etiket oluşturma ve silme (onay sorar). Esc, arka plan ya da "Bitti" kapatır. | `{ tags: Tag[], onClose() }` | Pencere (document.body'ye açılır) | 409 vb. hatalar pencerede yazı olarak gösterilir |
+| `handleCreate` | TagEditDialog.jsx (içinde) | Yazılan adla etiket oluşturur. | `event` | — | Hata mesajı gösterir |
+| `handleDelete` | TagEditDialog.jsx (içinde) | Onay alıp etiketi siler. | `tag: Tag` | — | Hata mesajı gösterir |
+| `handleKeyDown` | TagEditDialog.jsx (içinde) | Esc'de pencereyi kapatır. | `event` | — | — |
+| `NoteTags` | frontend/src/components/note-card/NoteTags.jsx | Karttaki etiket rozetleri; rozetteki çarpı etiketi çıkarır, "Etiket" düğmesi seçme kutusunu açar. Pencereden silinen etiketi karttan da kaldırır. Çöpteki notta yalnızca gösterir. | `{ note, onNoteChange }` | Rozetler, "Etiket" düğmesi | API hatası kartta yazı olarak gösterilir |
+| `updateNoteTags` | NoteTags.jsx (içinde) | Nota etiket ekler ya da çıkarır, sonra `onNoteChange(güncelNot)`. | `tag: Tag`, `shouldAdd: boolean` | `Promise<void>` | Hata mesajı gösterir |
+| `sortByName` | NoteTags.jsx | Etiketleri Türkçe alfabeye göre sıralar. | `tags: Tag[]` | `Tag[]` | — |
+| `TagPicker` | NoteTags.jsx | Etiket seçme kutusu: arama, işaretleme ve yazılan adla yeni etiket oluşturma; dışarı tıklama ya da Esc kapatır. | `{ note, onToggle(tag, shouldAdd), onClose() }` | Açılır kutu | Yükleme/oluşturma hatası kutuda gösterilir |
+| `handleCreate` | NoteTags.jsx (TagPicker içinde) | Yazılan adla etiket oluşturup nota ekler. | — | `Promise<void>` | Hata mesajı gösterir |
+| `handlePointerDown` | NoteTags.jsx (TagPicker içinde) | Etiket satırının dışına tıklanınca kutuyu kapatır. | `event` | — | — |
+| `handleKeyDown` | NoteTags.jsx (TagPicker içinde) | Esc'de kutuyu kapatır. | `event` | — | — |
+| `SearchPage` | frontend/src/pages/SearchPage.jsx | `/search` sayfası: adresteki `q` ve `tag` değerlerine göre sonuçları gösterir; başlıkta etiket adı ve aranan sözcük yazar. | — | Başlık ve not ızgarası; boş/yükleme/hata durumları | Arama başarısızsa hata yazısı |
+| `parseTagId` | SearchPage.jsx | Adresteki `tag` değerini sayıya çevirir; geçersizse `null`. | `value: string \| null` | `number \| null` | — |
 
 ---
 
