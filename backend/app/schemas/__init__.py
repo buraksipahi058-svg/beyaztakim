@@ -16,6 +16,8 @@ from app.schemas.common import (
     ORMModel,
     TagRead,
     UserRead,
+    UtcDatetime,
+    as_utc,
 )
 
 __all__ = [
@@ -26,4 +28,6 @@ __all__ = [
     "ORMModel",
     "TagRead",
     "UserRead",
+    "UtcDatetime",
+    "as_utc",
 ]

@@ -1,31 +1,103 @@
+/* Sahibi: 5. kişi (Liste Notları, Hatırlatıcı, Sabitleme, Renk) */
+
 .note-card__checklist {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 6px;
+  gap: 2px;
 }
 
 .note-card__checklist li {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
-.note-card__checklist li.is-done {
+.checklist-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.checklist-item input {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #5f6368;
+  cursor: pointer;
+}
+
+.checklist-item input:disabled {
+  cursor: default;
+}
+
+.checklist-item__text {
+  overflow-wrap: anywhere;
+}
+
+.note-card__checklist li.is-done .checklist-item__text {
   color: var(--text-muted);
   text-decoration: line-through;
 }
 
-.note-card__checkbox {
-  width: 14px;
-  height: 14px;
+.checklist-item__delete {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
   flex: none;
-  border: 2px solid currentColor;
-  border-radius: 3px;
-  opacity: 0.7;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
 }
 
-.is-done .note-card__checkbox {
-  background: currentColor;
+/* Silme çarpısı maddenin üzerine gelince görünür (dokunmatik ekranda hep görünür). */
+.note-card__checklist li:hover .checklist-item__delete,
+.checklist-item__delete:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .checklist-item__delete {
+    opacity: 1;
+  }
+}
+
+.checklist-item__delete:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--text);
+}
+
+.checklist-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+
+.checklist-add__input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  font: inherit;
+  color: var(--text);
+  outline: none;
+}
+
+.checklist-add__input:focus {
+  border-bottom-color: rgba(0, 0, 0, 0.25);
 }

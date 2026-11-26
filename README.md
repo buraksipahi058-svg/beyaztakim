@@ -308,7 +308,27 @@ Ayrıntılar: [docs/fonksiyonlar.md](docs/fonksiyonlar.md#4-arşiv-ve-çöp-kutu
 
 ### 5. Liste Notları, Hatırlatıcı, Sabitleme, Renk
 
-<!-- 5. kişi doldurur. -->
+- **Liste notları:** Liste türündeki kartlarda kutuya tıklayınca madde
+  işaretlenir (üstü çizilir); maddenin üzerine gelince görünen çarpı onu siler;
+  alttaki "Liste öğesi" alanına yazıp Enter'a basınca madde listenin sonuna
+  eklenir.
+- **Hatırlatıcı:** Kartın alt çubuğundaki zil düğmesi hazır seçenekleri
+  (bugün akşam, yarın 09:00, gelecek hafta) ve tarih-saat seçimini açar. Kartta
+  "27 Kas 09:00" gibi bir rozet görünür; zamanı geçince üstü çizilir, rozetteki
+  çarpı hatırlatıcıyı kaldırır. Sol menüdeki **Hatırlatıcılar** sayfası zamanı
+  gelmemiş hatırlatıcıları en yakını üstte olacak şekilde listeler. Zamanlar
+  UTC olarak saklanır, ekranda yerel saatle gösterilir.
+- **Sabitleme:** Raptiye düğmesi notu ana sayfada "Sabitlenenler"e taşır;
+  tekrar basınca sabitleme kalkar.
+- **Renk:** Palet düğmesi 11 renklik paleti açar; seçilen renk kartın
+  arka planı olur.
+
+Çöpteki notlarda bu düğmelerin hiçbiri görünmez.
+
+Uç noktalar: `POST /checklist/{note_id}/items`, `PATCH/DELETE /checklist/items/{id}`,
+`GET /reminders`, `PUT/DELETE /reminders/{note_id}`,
+`PATCH /pin-color/{note_id}/pin`, `PATCH /pin-color/{note_id}/color`.
+Ayrıntılar: [docs/fonksiyonlar.md](docs/fonksiyonlar.md#5-liste-notları-hatırlatıcı-sabitleme-renk).
 
 ## Testler
 

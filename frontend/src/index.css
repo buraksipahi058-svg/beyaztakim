@@ -103,6 +103,12 @@ a {
   gap: 16px;
 }
 
+/* Kartın alt çubuğuna birden çok kişinin düğmeleri girer; dar kartta taşmasın,
+   alt satıra geçsin. */
+.note-card__actions {
+  flex-wrap: wrap;
+}
+
 /* Not kartının alt çubuğundaki küçük ikon düğmeleri (kişilere ayrılmış
    yerlerde kullanılır): <button className="icon-button note-action"> */
 .note-action {
