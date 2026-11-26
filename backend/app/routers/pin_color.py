@@ -7,17 +7,23 @@ Yazdığın her fonksiyonu docs/fonksiyonlar.md'deki "5. Liste Notları, Hatırl
 
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/pin-color", tags=["sabitleme ve renk"])
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.schemas.pin_color import NotePinUpdate, NoteColorUpdate
-@router.patch("/{note_id}/pin")
-def update_note_pin(note_id: int, pin_in: NotePinUpdate, db: Session = Depends(get_db)):
-    # Buraya notu bulup is_pinned değerini güncelleyen mantığı yazacağız
-    return {"message": "Sabitleme durumu güncellendi", "is_pinned": pin_in.is_pinned}
+from app.dependencies import CurrentUser, DbSession
+from app.schemas import NoteRead
+from app.schemas.pin_color import NoteColorUpdate, NotePinUpdate
+from app.services import pin_color as pin_color_service
 
-@router.patch("/{note_id}/color")
-def update_note_color(note_id: int, color_in: NoteColorUpdate, db: Session = Depends(get_db)):
-    # Buraya notun rengini güncelleyen mantığı yazacağız
-    return {"message": "Renk güncellendi", "color": color_in.color}
+router = APIRouter(prefix="/pin-color", tags=["sabitleme ve renk"])
+
+
+@router.patch("/{note_id}/pin", response_model=NoteRead)
+def update_note_pin(note_id: int, data: NotePinUpdate, db: DbSession, current_user: CurrentUser):
+    """Notu sabitler ya da sabitlemeyi kaldırır; güncel notu döndürür."""
+    return pin_color_service.update_note_pin(db, current_user, note_id, data.is_pinned)
+
+
+@router.patch("/{note_id}/color", response_model=NoteRead)
+def update_note_color(
+    note_id: int, data: NoteColorUpdate, db: DbSession, current_user: CurrentUser
+):
+    """Notun rengini değiştirir; güncel notu döndürür."""
+    return pin_color_service.update_note_color(db, current_user, note_id, data.color)
