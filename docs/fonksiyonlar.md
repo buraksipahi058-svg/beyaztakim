@@ -263,12 +263,21 @@ içleri gerçek API ile çalışacak şekilde dolduruldu (durum: Tamamlandı).
 
 | Fonksiyon | Dosya | Ne yapar | Girdi | Çıktı | Hata durumları |
 |---|---|---|---|---|---|
-| `HomePage` | frontend/src/pages/HomePage.jsx | Ana sayfa (`/`). Notları API'den yükler; "Sabitlenenler" ve "Diğerleri" olarak iki ızgarada gösterir. Yükleme/hata durumu ve boş durum yazısı gösterir. | — | Not formu, iki not ızgarası; hata/yükleme/boş durum yazıları | Notlar yüklenemezse ekranda hata mesajı |
+| `HomePage` | frontend/src/pages/HomePage.jsx | Ana sayfa (`/`). Notları API'den yükler. Geniş ekranda notları sürükle-bırak tuvalinde (`NoteCanvas`), 720 pikselden dar ekranda "Sabitlenenler" ve "Diğerleri" ızgaralarında gösterir. Yükleme/hata durumu ve boş durum yazısı gösterir. | — | Not formu; tuval ya da iki not ızgarası; hata/yükleme/boş durum yazıları | Notlar yüklenemezse ekranda hata mesajı |
 | `handleNoteSaved` | frontend/src/pages/HomePage.jsx (HomePage içinde) | Formdan gelen kaydı listeye ekler (yoksa) ya da günceller (varsa). | `savedNote: Note` | — (listeyi günceller) | — |
 | `handleNoteChange` | frontend/src/pages/HomePage.jsx (HomePage içinde) | Listedeki notu güncel haliyle değiştirir. | `updatedNote: Note` | — (listeyi günceller) | — |
 | `handleNoteRemove` | frontend/src/pages/HomePage.jsx (HomePage içinde) | Notu listeden çıkarır. | `noteId: number` | — (listeyi günceller) | — |
 | `NoteGrid` | frontend/src/components/NoteGrid.jsx | Not kartlarını sırayla belirerek ızgarada gösterir; çıkan kart küçülerek kaybolur. | `{ notes: Note[], onNoteChange, onNoteRemove, onEdit }` | Kart ızgarası | — |
-| `NoteCard` | frontend/src/components/NoteCard.jsx | Tek notu renkli kart olarak gösterir; başlık, içerik ve diğer kişilere ayrılmış yerleri içerir. Sağ altta düzenleme düğmesi vardır (`onEdit` verilmişse). | `{ note: Note, onNoteChange, onNoteRemove, onEdit? }` | Not kartı | — |
+| `NoteCard` | frontend/src/components/NoteCard.jsx | Tek notu renkli kart olarak gösterir; başlık, içerik ve diğer kişilere ayrılmış yerleri içerir. Sağ altta düzenleme düğmesi vardır (`onEdit` verilmişse). Izgarada kartlar yer değiştirirken kayarak gider; tuvalde bu kapatılır (`layoutAnimation={false}`). | `{ note: Note, onNoteChange, onNoteRemove, onEdit?, layoutAnimation = true }` | Not kartı | — |
+| `NoteCanvas` | frontend/src/components/NoteCanvas.jsx | Ana sayfa tuvali. Notlar sürüklenip bırakıldıkları yerde kalır, konum `updateNotePosition` ile kaydedilir. Konumu olmayan notlar ilk boş yere yerleşir ve o konum hemen kaydedilir. Son taşınan kart öne gelir; sabitli kartlar her zaman üst katmandadır. Tuval en alttaki kartın altına kadar uzar, sağa taşan kartlar için yatay kaydırma vardır. | `{ notes: Note[], onNoteChange, onNoteRemove, onEdit }` | Kartların serbestçe durduğu alan | Konum kaydedilemezse kart eski yerine döner, üstte hata yazısı çıkar |
+| `handleMove` | NoteCanvas.jsx (içinde) | Bırakılan kartın yeni konumunu önce ekranda uygular, sonra kaydeder; hata olursa eski konuma geri alır. | `note: Note`, `x: number`, `y: number` | `Promise<void>` | Hata mesajı gösterir |
+| `raiseNote` | NoteCanvas.jsx (içinde) | Sürüklenmeye başlanan kartı katman sırasında en üste alır. | `noteId: number` | — | — |
+| `CanvasNote` | NoteCanvas.jsx | Tuvaldeki tek sürüklenebilir kart; konumu Framer Motion `x`/`y` değerleriyle verilir. Sabitliyse sağ üstte raptiye rozeti gösterir. | `{ note, zIndex, onDragStart(id), onMove(note, x, y), onNoteChange, onNoteRemove, onEdit }` | Sarmalanmış `NoteCard` | — |
+| `handlePointerDown` | NoteCanvas.jsx (CanvasNote içinde) | Sürüklemeyi yalnızca kartın boş bir yerinden başlatır; düğme, alan, etiket/renk/hatırlatıcı kutularına basmak sürükleme başlatmaz. | `event` | — | — |
+| `handleDragEnd` | NoteCanvas.jsx (CanvasNote içinde) | Bırakılan konumu (eksi değerler 0'a çekilerek) `onMove`'a bildirir. | — | — | — |
+| `placeUnpositionedNotes` | frontend/src/components/canvasLayout.js | Konumu olmayan notlara listedeki sırayla, sol üstten başlayarak ilk boş ızgara hücresini (240×220 px, 16 px aralık) verir; konumu olan notların kapladığı yerleri atlar. | `notes: Note[]`, `canvasWidth: number` | `{ [noteId]: { x, y } }` | — |
+| `canvasColumnCount` | canvasLayout.js | Tuval genişliğine kaç kart sütunu sığdığını hesaplar (en az 1). | `canvasWidth: number` | `number` | — |
+| `isPlaced` / `overlaps` | canvasLayout.js | Notun konumu var mı / iki dikdörtgen çakışıyor mu. | `note` / `a`, `b` | `boolean` | — |
 | `NoteForm` | frontend/src/components/NoteForm.jsx | "Not alın..." alanı: metin/liste türü seçimi, başlık, içerik ya da madde satırları, renk seçimi. Seçilen renk formun arka planına hemen uygulanır. Başlıkta Enter içeriğe/ilk maddeye geçer, maddede Enter yeni madde açar, boş maddede Backspace onu siler; form yalnızca "Not al"/"Kaydet" ile gönderilir. Yeni notu `createNote`, düzenlemeyi `updateNote` ile kaydeder. Düzenleme modunda liste maddeleri salt okunurdur (5. kişinin `/checklist` özelliği). | `{ editingNote?: Note \| null, onNoteSaved?(note), onCancelEdit?() }` | Ekleme/düzenleme formu; kayıtta `onNoteSaved` çağrılır | Kayıt başarısızsa formda hata mesajı (400 / 422) |
 | `buildNoteBody` | NoteForm.jsx (içinde) | Yeni not için API gövdesini kurar; `note_type` her zaman gönderilir (metin: başlık/içerik/renk; liste: başlık/renk/boş olmayan maddeler). | — | `NoteCreate` nesnesi | — |
 | `handleTitleKeyDown` | NoteForm.jsx (içinde) | Başlıkta Enter'ı yakalar; formu göndermek yerine içerik alanına ya da ilk maddeye geçer. | `event` | — | — |
@@ -396,6 +405,34 @@ içleri gerçek API ile çalışacak şekilde dolduruldu (durum: Tamamlandı).
 | Bilinmeyen renk | `ValidationError` | 400 |
 | Gövde şemaya uymuyor | (Pydantic) | 422 |
 
+#### `update_note_position`
+
+- **Sorumlu kişi:** 2. kişi
+- **Dosya:** backend/app/services/notes.py
+- **Uç nokta:** PATCH /notes/{note_id}/position → 200 `NoteRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Notun ana sayfa tuvalindeki konumunu (piksel) kaydeder. Taşımak
+içerik düzenlemesi sayılmaz; `updated_at` değişmez.
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Notun sahibi (`get_current_user` verir) |
+| `note_id` | `int` | Evet | Yoldan gelen not kimliği |
+| `position_x`, `position_y` | `int` | Evet | Gövdeden: `NotePositionUpdate`, ikisi de 0 ile 20000 arasında |
+
+**Çıktı:** `Note` (güncel hali)
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Değer eksik, eksi ya da 20000'den büyük | (Pydantic) | 422 |
+
 ### Uç noktalar (router)
 
 | Fonksiyon | Dosya | Uç nokta | Ne yapar | Çıktı | Hata durumları |
@@ -404,6 +441,7 @@ içleri gerçek API ile çalışacak şekilde dolduruldu (durum: Tamamlandı).
 | `list_notes` | backend/app/routers/notes.py | GET /notes | Aktif notları listeler. | 200 `list[NoteRead]` | 401 jeton yoksa |
 | `read_note` | backend/app/routers/notes.py | GET /notes/{note_id} | Tek not döndürür. | 200 `NoteRead` | 404 / 401 |
 | `update_note` | backend/app/routers/notes.py | PATCH /notes/{note_id} | Notu kısmen günceller. | 200 `NoteRead` | 400 / 404 / 401 / 422 |
+| `update_note_position` | backend/app/routers/notes.py | PATCH /notes/{note_id}/position | Gövde: `{ "position_x": int, "position_y": int }`. Tuvaldeki konumu kaydeder. | 200 `NoteRead` | 404 / 401 / 422 |
 
 ### Frontend API
 
@@ -413,6 +451,7 @@ içleri gerçek API ile çalışacak şekilde dolduruldu (durum: Tamamlandı).
 | `getNote` | frontend/src/api/notes.js | GET /notes/{id} çağırır. | `noteId: number` | `Promise<Note>` | 404 / 401 → `ApiError` |
 | `createNote` | frontend/src/api/notes.js | POST /notes çağırır. | `noteData: NoteCreate` | `Promise<Note>` | 400 / 422 / 401 → `ApiError` |
 | `updateNote` | frontend/src/api/notes.js | PATCH /notes/{id} çağırır. | `noteId: number`, `noteData: NoteUpdate` | `Promise<Note>` | 400 / 404 / 401 / 422 → `ApiError` |
+| `updateNotePosition` | frontend/src/api/notes.js | PATCH /notes/{id}/position çağırır. | `noteId: number`, `positionX: number`, `positionY: number` | `Promise<Note>` | 404 / 401 / 422 → `ApiError` |
 
 ---
 
@@ -1199,7 +1238,8 @@ girişe geçti.)
 | `Settings.cors_origin_list` | app/config.py | Virgülle ayrılmış `CORS_ORIGINS` değerini listeye çevirir (özellik). | — | `list[str]` | — |
 | `build_engine` | app/database.py | Verilen adres için veritabanı bağlantısı (engine) kurar; SQLite'ta yabancı anahtarları açar. | `database_url: str` | `Engine` | — |
 | `_enable_sqlite_foreign_keys` | app/database.py | Her SQLite bağlantısında `PRAGMA foreign_keys=ON` çalıştırır. | `dbapi_connection`, `_connection_record` | `None` | — |
-| `create_tables` | app/database.py | Modellerdeki tabloları (yoksa) oluşturur. | `bind: Engine \| None = None` | `None` | — |
+| `create_tables` | app/database.py | Modellerdeki tabloları (yoksa) oluşturur, ardından `add_missing_columns` ile var olan tablolara eksik sütunları ekler. | `bind: Engine \| None = None` | `None` | — |
+| `add_missing_columns` | app/database.py | Var olan tablolara modelde olup veritabanında olmayan sütunları `ALTER TABLE ... ADD COLUMN` ile ekler; böylece modele sütun eklenince ekibin mevcut veritabanı silinmeden güncellenir. Yalnızca boş olabilen sütunlar eklenir. | `bind: Engine` | `list[str]` (eklenen "tablo.sütun" adları) | Eksik sütun boş olamayan bir sütunsa `RuntimeError` (veritabanı silinip yeniden oluşturulmalı) |
 | `get_db` | app/database.py | İstek başına veritabanı oturumu açar, istek bitince kapatır. Router'larda `db: DbSession` ile kullanılır. | — | `Iterator[Session]` | — |
 | `utc_now` | app/models.py | Şu anki zamanı UTC olarak verir (tarih alanlarının varsayılanı). | — | `datetime` | — |
 | `as_utc` (ve `UtcDatetime` tipi) | app/schemas/common.py | Tarihi UTC saat dilimiyle işaretler; SQLite'tan saat dilimsiz okunan tarihler JSON'da `Z` ile gider. Ortak okuma şemalarındaki tüm tarih alanları bu tipi kullanır. | `value: datetime` | `datetime` (UTC) | — |
@@ -1235,3 +1275,5 @@ girişe geçti.)
 | `handleNoteRemove` | src/hooks/useNoteList.js (useNoteList içinde) | Notu listeden çıkarır. | `noteId: number` | — | — |
 | `useDismiss` | src/hooks/useDismiss.js | Açılır kutular için: verilen öğenin dışına tıklanınca ya da Esc'de `onClose` çağırır; kutu kapalıyken dinlemez. | `ref`, `onClose()`, `isOpen = true` | — | — |
 | `handlePointerDown` / `handleKeyDown` | src/hooks/useDismiss.js (içinde) | Dışarı tıklamayı / Esc tuşunu yakalar. | `event` | — | — |
+| `useMediaQuery` | src/hooks/useMediaQuery.js | Bir CSS medya sorgusunun (ör. `(max-width: 720px)`) şu an geçerli olup olmadığını döndürür; ekran boyutu değişince güncellenir. | `query: string` | `boolean` | — |
+| `handleChange` | src/hooks/useMediaQuery.js (içinde) | Sorgunun sonucu değişince durumu günceller. | — | — | — |

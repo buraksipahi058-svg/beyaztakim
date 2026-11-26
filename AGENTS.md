@@ -149,7 +149,8 @@ onayı olmadan main'e giremez (`.github/CODEOWNERS`).
 
 - `frontend/src/main.jsx`, `App.jsx`, `routes.js`, `index.css`
 - `frontend/src/hooks/`: `useNoteList.js` (not listesi gösteren sayfalar için),
-  `useDismiss.js` (açılır kutuyu dışarı tıklama / Esc ile kapatma)
+  `useDismiss.js` (açılır kutuyu dışarı tıklama / Esc ile kapatma),
+  `useMediaQuery.js` (ekran genişliğine göre davranış, ör. dar ekranda tuvali kapatma)
 - `frontend/src/api/client.js`, `frontend/src/api/health.js`
 - `frontend/src/components/`: `Layout.jsx`, `Layout.css`, `PageTransition.jsx`,
   `ApiStatus.jsx`, `EmptyState.jsx`, `Icon.jsx`, `noteColors.js`
@@ -172,7 +173,7 @@ Yollar `backend/app/`, `backend/tests/` ve `frontend/src/` altındadır.
 | Kişi | Backend | Frontend |
 |---|---|---|
 | **1. Kullanıcı ve Güvenlik** (`/auth`) | `routers/auth.py`, `services/auth.py`, `schemas/auth.py`, `tests/test_auth.py`, `dependencies.py` içindeki `get_current_user` | `pages/LoginPage.jsx`, `pages/RegisterPage.jsx`, `components/AuthPages.jsx` (+`.css`), `components/RequireAuth.jsx`, `components/UserMenu.jsx` (+`.css`), `api/auth.js`, `api/authSession.js` |
-| **2. Not İşlemleri** (`/notes`) | `routers/notes.py`, `services/notes.py`, `schemas/notes.py`, `tests/test_notes.py` | `pages/HomePage.jsx`, `components/NoteCard.jsx` (+`.css`), `NoteGrid.jsx`, `NoteForm.jsx` (+`.css`), `api/notes.js` |
+| **2. Not İşlemleri** (`/notes`) | `routers/notes.py`, `services/notes.py`, `schemas/notes.py`, `tests/test_notes.py` | `pages/HomePage.jsx`, `components/NoteCard.jsx` (+`.css`), `NoteGrid.jsx`, `NoteForm.jsx` (+`.css`), `NoteCanvas.jsx` (+`.css`), `canvasLayout.js`, `api/notes.js` |
 | **3. Etiket ve Arama** (`/tags`, `/search`) | `routers/tags.py`, `services/tags.py`, `schemas/tags.py`, `tests/test_tags.py`, `routers/search.py`, `services/search.py`, `tests/test_search.py` | `pages/SearchPage.jsx`, `components/SearchBar.jsx` (+`.css`), `components/TagMenu.jsx` (+`.css`), `components/TagEditDialog.jsx` (+`.css`), `components/note-card/NoteTags.jsx` (+`.css`), `api/tags.js`, `api/search.js` |
 | **4. Arşiv ve Çöp Kutusu** (`/archive`, `/trash`) | `routers/archive.py`, `services/archive.py`, `tests/test_archive.py`, `routers/trash.py`, `services/trash.py`, `tests/test_trash.py` | `pages/ArchivePage.jsx`, `pages/TrashPage.jsx`, `components/note-card/ArchiveTrashActions.jsx`, `api/archive.js`, `api/trash.js` |
 | **5. Liste Notları, Hatırlatıcı, Sabitleme, Renk** (`/checklist`, `/reminders`, `/pin-color`) | `routers/`, `services/`, `schemas/` altında `checklist.py`, `reminders.py`, `pin_color.py`; `tests/test_checklist.py`, `test_reminders.py`, `test_pin_color.py` | `pages/RemindersPage.jsx`, `components/note-card/` altında `ChecklistItems.jsx`, `PinColorActions.jsx`, `ReminderChip.jsx` (üçü de +`.css`), `ReminderPicker.jsx`, `reminderTime.js`; `api/checklist.js`, `api/reminders.js`, `api/pinColor.js` |

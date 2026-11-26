@@ -1,10 +1,14 @@
-"""Altyapı fonksiyonlarının testleri (router keşfi, hata dönüşümü, tarih biçimi)."""
+"""Altyapı fonksiyonlarının testleri (router keşfi, hata dönüşümü, tarih biçimi,
+eksik sütunların eklenmesi)."""
 
 import asyncio
 import importlib
 import json
 from datetime import UTC, datetime, timedelta, timezone
 
+from sqlalchemy import inspect, text
+
+from app.database import add_missing_columns, build_engine, create_tables
 from app.main import service_error_handler
 from app.routers import discover_routers
 from app.schemas import UserRead, as_utc
@@ -65,3 +69,46 @@ def test_read_schemas_send_dates_with_utc_marker():
     user = UserRead(id=1, email="a@example.com", created_at=datetime(2026, 12, 1, 9, 0))
 
     assert user.model_dump_json().endswith('"created_at":"2026-12-01T09:00:00Z"}')
+
+
+def make_database_without_position_columns():
+    """Konum sütunları eklenmeden önceki bir veritabanını taklit eder (içinde bir not var)."""
+    engine = build_engine("sqlite://")
+    create_tables(engine)
+    with engine.begin() as connection:
+        connection.execute(text("ALTER TABLE notes DROP COLUMN position_x"))
+        connection.execute(text("ALTER TABLE notes DROP COLUMN position_y"))
+        connection.execute(
+            text(
+                "INSERT INTO users (id, email, password_hash, created_at) "
+                "VALUES (1, 'eski@example.com', 'x', '2026-01-01 00:00:00')"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO notes (id, user_id, title, content, note_type, color, is_pinned, "
+                "is_archived, is_trashed, created_at, updated_at) VALUES (1, 1, 'Eski not', '', "
+                "'text', 'default', 0, 0, 0, '2026-01-01 00:00:00', '2026-01-01 00:00:00')"
+            )
+        )
+    return engine
+
+
+def test_add_missing_columns_adds_new_nullable_columns_and_keeps_rows():
+    engine = make_database_without_position_columns()
+
+    added = add_missing_columns(engine)
+
+    columns = {column["name"] for column in inspect(engine).get_columns("notes")}
+    with engine.connect() as connection:
+        row = connection.execute(text("SELECT title, position_x FROM notes WHERE id = 1")).one()
+    assert {"notes.position_x", "notes.position_y"} <= set(added)
+    assert {"position_x", "position_y"} <= columns
+    assert row == ("Eski not", None)
+
+
+def test_add_missing_columns_does_nothing_on_up_to_date_database():
+    engine = build_engine("sqlite://")
+    create_tables(engine)
+
+    assert add_missing_columns(engine) == []

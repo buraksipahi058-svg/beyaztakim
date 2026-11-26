@@ -266,3 +266,70 @@ def test_get_missing_note_endpoint_returns_404(authed_client):
 def test_create_note_endpoint_validates_input(authed_client):
     assert authed_client.post("/notes", json={"color": "mavi"}).status_code == 400
     assert authed_client.post("/notes", json={"note_type": "hucre"}).status_code == 422
+
+
+# --- Tuvaldeki konum ---------------------------------------------------------
+
+
+def test_update_note_position_saves_position_and_keeps_updated_at(db_session, seed_user):
+    note = notes_service.create_note(db_session, seed_user, NoteCreate(title="Taşınacak"))
+    updated_at_before = note.updated_at
+
+    moved = notes_service.update_note_position(db_session, seed_user, note.id, 320, 480)
+
+    assert (moved.position_x, moved.position_y) == (320, 480)
+    assert moved.updated_at == updated_at_before
+
+
+def test_update_note_position_other_users_note_raises_not_found(db_session, seed_user):
+    other = make_user(db_session, "baska@beyaztakim.local")
+    note = notes_service.create_note(db_session, other, NoteCreate(title="Başkasının"))
+
+    with pytest.raises(NotFoundError):
+        notes_service.update_note_position(db_session, seed_user, note.id, 10, 10)
+
+
+def test_new_note_has_no_position(authed_client):
+    created = authed_client.post("/notes", json={"title": "Yeni"}).json()
+
+    assert created["position_x"] is None
+    assert created["position_y"] is None
+
+
+def test_position_endpoint_returns_note_with_position(authed_client):
+    note_id = authed_client.post("/notes", json={"title": "Tuval"}).json()["id"]
+
+    response = authed_client.patch(
+        f"/notes/{note_id}/position", json={"position_x": 256, "position_y": 0}
+    )
+
+    assert response.status_code == 200
+    assert (response.json()["position_x"], response.json()["position_y"]) == (256, 0)
+
+
+def test_position_endpoint_rejects_out_of_range_values(authed_client):
+    note_id = authed_client.post("/notes", json={"title": "Tuval"}).json()["id"]
+
+    negative = authed_client.patch(
+        f"/notes/{note_id}/position", json={"position_x": -1, "position_y": 0}
+    )
+    too_far = authed_client.patch(
+        f"/notes/{note_id}/position", json={"position_x": 0, "position_y": 20001}
+    )
+
+    assert negative.status_code == 422
+    assert too_far.status_code == 422
+
+
+def test_position_endpoint_missing_note_returns_404(authed_client):
+    response = authed_client.patch(
+        "/notes/9999/position", json={"position_x": 0, "position_y": 0}
+    )
+
+    assert response.status_code == 404
+
+
+def test_position_endpoint_without_login_returns_401(client):
+    response = client.patch("/notes/1/position", json={"position_x": 0, "position_y": 0})
+
+    assert response.status_code == 401

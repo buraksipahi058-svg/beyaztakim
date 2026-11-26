@@ -277,15 +277,24 @@ Uç noktalar: `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`,
 
 - **Not ekleme:** Ana sayfanın üstündeki **Not alın...** alanı açılınca
   başlık, tür (**Metin** ya da **Liste**), içerik ya da madde satırları ve
-  renk seçilip **Not al** ile kaydedilir.
-- **Listeleme:** Ana sayfa arşivde ve çöpte olmayan notları gösterir;
-  sabitlenen notlar "Sabitlenenler" başlığı altında üstte durur, diğerleri en
-  son güncellenen üstte olacak şekilde sıralanır.
+  renk seçilip **Not al** ile kaydedilir. Seçilen renk form üzerinde hemen
+  görünür. Başlıkta Enter içeriğe ya da ilk maddeye geçer; maddede Enter yeni
+  madde açar, boş maddede Backspace onu siler.
+- **Tuval (sürükle-bırak):** Ana sayfa bir tahta gibidir. Kartın boş bir
+  yerinden tutup sürükleyince not bırakıldığı yerde kalır ve konum kaydedilir;
+  sayfa yenilense de aynı yerde durur. Yeni notlar ilk boş yere yerleşir.
+  Sabitlenen notlar raptiye rozeti taşır ve her zaman diğerlerinin üstünde
+  çizilir. Kart üzerindeki düğmeler (renk, etiket, arşiv vb.) sürükleme
+  başlatmaz.
+- **Dar ekran:** 720 pikselden dar ekranlarda (telefon) tuval kapanır;
+  sabitlenen notlar "Sabitlenenler" başlığı altında üstte, diğerleri altında
+  sıralanır. Tuvaldeki konumlar korunur.
 - **Düzenleme:** Kartın sağ altındaki kalem düğmesi notu forma geri yükler;
   başlık, içerik ve renk değiştirilip **Kaydet**'e basılır. Liste maddeleri
   kartın üzerinden düzenlenir (5. kişi).
 
-Uç noktalar: `POST /notes`, `GET /notes`, `GET /notes/{id}`, `PATCH /notes/{id}`.
+Uç noktalar: `POST /notes`, `GET /notes`, `GET /notes/{id}`, `PATCH /notes/{id}`,
+`PATCH /notes/{id}/position` (tuvaldeki konum).
 
 ### 3. Etiket ve Arama
 

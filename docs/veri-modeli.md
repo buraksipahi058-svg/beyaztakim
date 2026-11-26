@@ -5,6 +5,10 @@ açıklar. Kodda karşılığı: `backend/app/models.py`.
 
 - Veritabanı: SQLite (adres `.env` dosyasındaki `DATABASE_URL` ile değiştirilebilir)
 - Tablolar uygulama açılışında (ve `python -m app.seed` ile) otomatik oluşturulur.
+  Modele sonradan eklenen **boş olabilen** sütunlar da açılışta var olan
+  tablolara otomatik eklenir (`database.py` → `add_missing_columns`); veritabanını
+  silmek gerekmez. Boş olamayan yeni bir sütun eklenirse veritabanı dosyası
+  silinip yeniden oluşturulmalıdır.
 - Model değişikliği ortak bir değişikliktir: önce ekiple konuşun, sonra bu belgeyi
   ve `models.py`'yi birlikte güncelleyin.
 
@@ -35,6 +39,8 @@ erDiagram
         bool is_trashed
         datetime trashed_at
         datetime reminder_at
+        int position_x
+        int position_y
         datetime created_at
         datetime updated_at
     }
@@ -86,6 +92,8 @@ Kullanıcının notları. Her not tek bir kullanıcıya aittir.
 | `is_trashed` | bool | varsayılan `false` | Çöp kutusunda mı |
 | `trashed_at` | datetime | boş olabilir | Çöpe atılma zamanı |
 | `reminder_at` | datetime | boş olabilir | Hatırlatıcı zamanı |
+| `position_x` | int | boş olabilir | Ana sayfa tuvalindeki yatay konum (piksel). Boşsa not henüz yerleştirilmemiştir. |
+| `position_y` | int | boş olabilir | Ana sayfa tuvalindeki dikey konum (piksel) |
 | `created_at` | datetime | varsayılan: şu an (UTC) | Oluşturulma zamanı |
 | `updated_at` | datetime | her güncellemede yenilenir | Son değişiklik zamanı |
 

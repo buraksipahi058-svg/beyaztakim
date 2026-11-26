@@ -6,7 +6,7 @@ ikinci parametre olarak `user: User` alır. Hatalar app/services/errors.py'deki
 sınıflarla bildirilir.
 """
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.models import NOTE_TYPE_CHECKLIST, ChecklistItem, Note, User
@@ -99,6 +99,24 @@ def update_note(db: Session, user: User, note_id: int, data: NoteUpdate) -> Note
     for field, value in changes.items():
         setattr(note, field, value)
 
+    db.commit()
+    db.refresh(note)
+    return note
+
+
+def update_note_position(
+    db: Session, user: User, note_id: int, position_x: int, position_y: int
+) -> Note:
+    """Notun ana sayfa tuvalindeki konumunu kaydeder.
+
+    Taşımak içerik düzenlemesi sayılmaz; `updated_at` değişmez.
+    """
+    note = get_note(db, user, note_id)
+    db.execute(
+        update(Note)
+        .where(Note.id == note.id)
+        .values(position_x=position_x, position_y=position_y, updated_at=Note.updated_at)
+    )
     db.commit()
     db.refresh(note)
     return note

@@ -22,3 +22,11 @@ export function createNote(noteData) {
 export function updateNote(noteId, noteData) {
   return apiRequest(`/notes/${noteId}`, { method: 'PATCH', body: noteData });
 }
+
+// Notun ana sayfa tuvalindeki konumunu (piksel) kaydeder; güncel notu döndürür.
+export function updateNotePosition(noteId, positionX, positionY) {
+  return apiRequest(`/notes/${noteId}/position`, {
+    method: 'PATCH',
+    body: { position_x: positionX, position_y: positionY },
+  });
+}

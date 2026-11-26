@@ -26,7 +26,15 @@ export const cardVariants = {
 //   onNoteRemove(id)   : not bu listeden çıkınca (ör. arşivlendi) çağrılır
 // Ek olarak 2. kişinin düzenleme düğmesi:
 //   onEdit(note)       : düzenleme isteğinde notla çağrılır (verilmezse düğme gizli)
-export default function NoteCard({ note, onNoteChange, onNoteRemove, onEdit }) {
+//   layoutAnimation    : ızgarada kartlar yer değiştirirken kayarak gider (varsayılan
+//                        true); tuvalde sürüklemeyle çakışmasın diye false verilir.
+export default function NoteCard({
+  note,
+  onNoteChange,
+  onNoteRemove,
+  onEdit,
+  layoutAnimation = true,
+}) {
   const slotProps = { note, onNoteChange, onNoteRemove };
   const isChecklist = note.note_type === 'checklist';
 
@@ -36,7 +44,7 @@ export default function NoteCard({ note, onNoteChange, onNoteRemove, onEdit }) {
       style={{ '--note-bg': noteColor(note.color) }}
       variants={cardVariants}
       exit="exit"
-      layout
+      layout={layoutAnimation}
       whileHover={{ y: -3 }}
       transition={{ type: 'spring', stiffness: 320, damping: 26 }}
     >

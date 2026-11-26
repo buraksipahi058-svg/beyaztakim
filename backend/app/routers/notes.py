@@ -10,7 +10,7 @@ from fastapi import APIRouter, status
 
 from app.dependencies import CurrentUser, DbSession
 from app.schemas import NoteRead
-from app.schemas.notes import NoteCreate, NoteUpdate
+from app.schemas.notes import NoteCreate, NotePositionUpdate, NoteUpdate
 from app.services import notes as notes_service
 
 router = APIRouter(prefix="/notes", tags=["notlar"])
@@ -38,3 +38,13 @@ def read_note(note_id: int, db: DbSession, current_user: CurrentUser):
 def update_note(note_id: int, data: NoteUpdate, db: DbSession, current_user: CurrentUser):
     """Notu kısmen günceller; yalnızca gönderilen alanlar değişir."""
     return notes_service.update_note(db, current_user, note_id, data)
+
+
+@router.patch("/{note_id}/position", response_model=NoteRead)
+def update_note_position(
+    note_id: int, data: NotePositionUpdate, db: DbSession, current_user: CurrentUser
+):
+    """Notun ana sayfa tuvalindeki konumunu kaydeder; güncel notu döndürür."""
+    return notes_service.update_note_position(
+        db, current_user, note_id, data.position_x, data.position_y
+    )

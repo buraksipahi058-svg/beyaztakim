@@ -65,6 +65,9 @@ class NoteRead(ORMModel):
     is_trashed: bool
     trashed_at: UtcDatetime | None
     reminder_at: UtcDatetime | None
+    # Ana sayfa tuvalindeki konum (piksel); boşsa not henüz yerleştirilmemiştir.
+    position_x: int | None = None
+    position_y: int | None = None
     created_at: UtcDatetime
     updated_at: UtcDatetime
     tags: list[TagRead] = []

@@ -1,0 +1,55 @@
+/* Sahibi: 2. kişi (Not İşlemleri) */
+
+/* Sağa taşan kartlar için yatay kaydırma. */
+.note-canvas {
+  position: relative;
+  overflow-x: auto;
+}
+
+.note-canvas__area {
+  position: relative;
+  min-width: 100%;
+}
+
+.canvas-note {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 240px;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+
+.canvas-note:active {
+  cursor: grabbing;
+}
+
+.canvas-note .note-card {
+  cursor: inherit;
+}
+
+/* Kart üzerinde etiket, renk ya da hatırlatıcı kutusu açıkken kart en üste çıksın. */
+.canvas-note:has(.tag-picker, .color-palette, .reminder-picker) {
+  z-index: 5000 !important;
+}
+
+/* Sabitlenmiş kartın sağ üst köşesindeki raptiye rozeti. */
+.canvas-note__pin {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.note-canvas__error {
+  color: #b3261e;
+}
