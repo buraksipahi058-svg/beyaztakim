@@ -1,0 +1,121 @@
+/* Sahibi: 2. kişi (Not İşlemleri) */
+
+/* Tuvaldeki etiket destesi. Kenardan içeride başlama payı (top/left) TagStack.jsx'te verilir. */
+.tag-stack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 240px;
+  padding-top: 14px;
+  border-radius: 12px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.tag-stack:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 4px;
+}
+
+/* Destenin üstündeki etiket: ad ve not sayısı. */
+.tag-stack__label {
+  position: absolute;
+  top: 0;
+  left: 12px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 210px;
+  height: 28px;
+  padding: 0 6px 0 10px;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.35);
+}
+
+.tag-stack__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag-stack__count {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  font-size: 0.75rem;
+}
+
+.tag-stack__pile {
+  position: relative;
+  transition: opacity 0.2s ease;
+}
+
+/* Deste açıkken kartlar "dışarıda", deste soluk kalır. */
+.tag-stack--open .tag-stack__pile {
+  opacity: 0.35;
+}
+
+.tag-stack__card {
+  position: relative;
+  min-height: 140px;
+  padding: 24px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--note-bg, #fff);
+  box-shadow:
+    0 1px 2px rgba(60, 64, 67, 0.25),
+    0 1px 3px 1px rgba(60, 64, 67, 0.12);
+  overflow: hidden;
+  rotate: var(--tilt, 0deg);
+  translate: var(--shift, 0px) var(--shift, 0px);
+  transition:
+    rotate 0.2s ease,
+    translate 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Arkadaki kartlar üstteki kartla aynı boyda, onun arkasında durur. */
+.tag-stack__card--behind {
+  position: absolute;
+  inset: 0;
+}
+
+/* Üzerine gelince deste hafifçe açılır: tıklanabileceği belli olsun. */
+.tag-stack:hover .tag-stack__card--behind {
+  rotate: calc(var(--tilt, 0deg) * 2);
+  translate: calc(var(--shift, 0px) * 1.6) calc(var(--shift, 0px) * 1.2);
+}
+
+.tag-stack:hover .tag-stack__card:not(.tag-stack__card--behind),
+.tag-stack--dragging .tag-stack__card:not(.tag-stack__card--behind) {
+  box-shadow:
+    0 2px 4px rgba(60, 64, 67, 0.3),
+    0 4px 10px 2px rgba(60, 64, 67, 0.15);
+}
+
+.tag-stack__title {
+  margin: 0 0 6px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.tag-stack__text {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}

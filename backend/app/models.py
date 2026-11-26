@@ -102,6 +102,9 @@ class Tag(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     name: Mapped[str] = mapped_column(String(100))
+    # Ana sayfa tuvalinde bu etiketin destesinin konumu (piksel). Boş = henüz yerleştirilmemiş.
+    position_x: Mapped[int | None] = mapped_column(Integer)
+    position_y: Mapped[int | None] = mapped_column(Integer)
 
     user: Mapped[User] = relationship(back_populates="tags")
     notes: Mapped[list[Note]] = relationship(secondary=note_tags, back_populates="tags")

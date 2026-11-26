@@ -289,6 +289,15 @@ Uç noktalar: `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`,
   kaydırılır. Yeni notlar ilk boş yere yerleşir. Sabitlenen notlar raptiye
   rozeti taşır ve her zaman diğerlerinin üstünde çizilir. Kart üzerindeki
   düğmeler (renk, etiket, arşiv vb.) sürükleme başlatmaz.
+- **Etikete göre grupla (desteler):** Tuvalin üstündeki **Etikete göre
+  grupla** düğmesi açıkken aynı etiketi taşıyan notlar bir destede üst üste
+  durur; destenin üstünde etiket adı ve not sayısı yazar. Birden çok etiketi
+  olan not her etiketinin destesinde görünür; etiketsiz notlar serbest kalır.
+  Deste sürüklenip istenen yere bırakılır, yeri kaydedilir. Desteye basınca
+  arka plan kararır ve kartlar ekranın ortasında açılır; açık kartlar normal
+  kullanılır (düzenle, renk, etiket, arşiv). Boş bir yere basınca, çarpıya
+  basınca ya da Esc ile kartlar desteye geri dönerek kapanır. Düğme kapanınca
+  notlar kendi yerlerine döner; tercih tarayıcıda hatırlanır.
 - **Dar ekran:** 720 pikselden dar ekranlarda (telefon) tuval kapanır;
   sabitlenen notlar "Sabitlenenler" başlığı altında üstte, diğerleri altında
   sıralanır. Tuvaldeki konumlar korunur.
@@ -316,6 +325,7 @@ Uç noktalar: `POST /notes`, `GET /notes`, `GET /notes/{id}`, `PATCH /notes/{id}
   uyan notları getirir.
 
 Uç noktalar: `GET/POST /tags`, `DELETE /tags/{id}`,
+`PATCH /tags/{id}/position` (ana sayfa tuvalindeki destenin yeri),
 `POST/DELETE /tags/notes/{note_id}/tags/{tag_id}`, `GET /search?q=&tag_id=`.
 Ayrıntılar: [docs/fonksiyonlar.md](docs/fonksiyonlar.md#3-etiket-ve-arama).
 

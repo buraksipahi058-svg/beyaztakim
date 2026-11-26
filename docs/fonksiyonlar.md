@@ -269,24 +269,45 @@ içleri gerçek API ile çalışacak şekilde dolduruldu (durum: Tamamlandı).
 | `handleNoteRemove` | frontend/src/pages/HomePage.jsx (HomePage içinde) | Notu listeden çıkarır. | `noteId: number` | — (listeyi günceller) | — |
 | `NoteGrid` | frontend/src/components/NoteGrid.jsx | Not kartlarını sırayla belirerek ızgarada gösterir; çıkan kart küçülerek kaybolur. | `{ notes: Note[], onNoteChange, onNoteRemove, onEdit }` | Kart ızgarası | — |
 | `NoteCard` | frontend/src/components/NoteCard.jsx | Tek notu renkli kart olarak gösterir; başlık, içerik ve diğer kişilere ayrılmış yerleri içerir. Sağ altta düzenleme düğmesi vardır (`onEdit` verilmişse). Izgarada kartlar yer değiştirirken kayarak gider; tuvalde bu kapatılır (`layoutAnimation={false}`). | `{ note: Note, onNoteChange, onNoteRemove, onEdit?, layoutAnimation = true }` | Not kartı | — |
-| `NoteCanvas` | frontend/src/components/NoteCanvas.jsx | Ana sayfa tuvali: pencereye sığan, sayfadan koyu (noktalı gri), çerçeveli ve kendi içinde kayan alan. Notlar sürüklenip bırakıldıkları yerde kalır, konum `updateNotePosition` ile kaydedilir. Sürüklenen kart tuvalin görünen kısmından çıkmaz; kenara dayanınca tuval o yöne kendiliğinden kayar ve gerekirse büyür. Boş yerden tutup sürükleyince tuval kayar. Konumu olmayan notlar ilk boş yere yerleşir ve o konum hemen kaydedilir. Son taşınan kart öne gelir; sabitli kartlar her zaman üst katmandadır. Kartta etiket/renk/hatırlatıcı kutusu açılınca tuval onu gösterecek kadar kayar. | `{ notes: Note[], onNoteChange, onNoteRemove, onEdit }` | Kartların serbestçe durduğu alan | Konum kaydedilemezse kart eski yerine döner, üstte hata yazısı çıkar |
+| `NoteCanvas` | frontend/src/components/NoteCanvas.jsx | Ana sayfa tuvali: pencereye sığan, sayfadan koyu (noktalı gri), çerçeveli ve kendi içinde kayan alan. Notlar sürüklenip bırakıldıkları yerde kalır, konum `updateNotePosition` ile kaydedilir. Üstteki "Etikete göre grupla" düğmesi açıkken aynı etiketli notlar bir destede (`TagStack`) üst üste durur; birden çok etiketi olan not her etiketinin destesinde görünür, etiketsiz notlar serbest kalır. Desteler sürüklenip bırakılır (`updateTagPosition`); desteye basınca kartlar ekranın ortasında açılır (`StackOverlay`). Gruplama kapanınca notlar kendi yerlerine döner; tercih tarayıcıda saklanır. Sürüklenen öğe tuvalin görünen kısmından çıkmaz; kenara dayanınca tuval o yöne kendiliğinden kayar ve gerekirse büyür. Boş yerden tutup sürükleyince tuval kayar. Konumu olmayan notlar ve desteler ilk boş yere yerleşir ve o konum hemen kaydedilir. Son taşınan öğe öne gelir; sabitli kartlar her zaman üst katmandadır. | `{ notes: Note[], onNoteChange, onNoteRemove, onEdit }` | Kartların ve destelerin serbestçe durduğu alan; açık destenin katmanı | Konum kaydedilemezse öğe eski yerine döner, üstte hata yazısı çıkar; etiketler yüklenemezse hata yazısı |
+| `readGroupedPreference` / `saveGroupedPreference` | NoteCanvas.jsx | "Etikete göre grupla" tercihini tarayıcıdan (localStorage) okur / yazar. Tarayıcı izin vermezse okuma `false` döner, yazma sessizce atlanır. | — / `isGrouped: boolean` | `boolean` / — | — |
 | `measureViewportHeight` | NoteCanvas.jsx (içinde) | Tuvalin yüksekliğini pencerenin kalan yüksekliğine göre ayarlar (en az 420 px); pencere boyutu değişince yeniden ölçer. | — | — (durumu günceller) | — |
-| `handleMove` | NoteCanvas.jsx (içinde) | Bırakılan kartın yeni konumunu önce ekranda uygular, sonra kaydeder; hata olursa eski konuma geri alır. | `note: Note`, `x: number`, `y: number` | `Promise<void>` | Hata mesajı gösterir |
-| `raiseNote` | NoteCanvas.jsx (içinde) | Sürüklenmeye başlanan kartı katman sırasında en üste alır. | `noteId: number` | — | — |
-| `trackPointer` | NoteCanvas.jsx (içinde) | İmleç bırakılana kadar pencere genelinde imleç hareketini dinler, bırakınca dinleyicileri kaldırır. Aynı anda tek hareket izlenir; sayfadan çıkılınca yarım kalan izleme kaldırılır. | `onPointerMove(event)`, `onPointerEnd(event)` | — | — |
-| `handleAreaPointerDown` | NoteCanvas.jsx (içinde) | Tuvalin boş yerine basılınca tuvali imleçle birlikte kaydırmaya başlar (kartlara ve kaydırma çubuklarına basmak bunu başlatmaz). | `event` | — | — |
+| `loadTags` | NoteCanvas.jsx (içinde) | Gruplama açıkken etiketleri (deste konumlarıyla) yükler; etiket eklenip silinince (`onTagsChanged`) yeniden yükler. | — | — (durumu günceller) | Hata yazısı gösterir |
+| `setTagPosition` | NoteCanvas.jsx (içinde) | Ekrandaki etiket listesinde bir destenin konumunu değiştirir (kaydetmez). | `tagId: number`, `x: number`, `y: number` | — | — |
+| `raiseItem` | NoteCanvas.jsx (içinde) | Sürüklenmeye başlanan kartı ya da desteyi katman sırasında en üste alır. | `key: string` (`note:3`, `tag:5`) | — | — |
+| `handleNoteMove` | NoteCanvas.jsx (içinde) | Bırakılan kartın yeni konumunu önce ekranda uygular, sonra kaydeder; hata olursa eski konuma geri alır. | `note: Note`, `x: number`, `y: number` | `Promise<void>` | Hata mesajı gösterir |
+| `handleStackMove` | NoteCanvas.jsx (içinde) | Bırakılan destenin yeni konumunu önce ekranda uygular, sonra `updateTagPosition` ile kaydeder; hata olursa eski konuma geri alır. | `tag: Tag`, `x: number`, `y: number` | `Promise<void>` | Hata mesajı gösterir |
+| `openStackAt` | NoteCanvas.jsx (içinde) | Desteyi açar; kartların çıkacağı nokta olarak destenin ekrandaki orta noktasını saklar. | `tagId: number`, `element: HTMLElement` | — | — |
+| `closeStack` | NoteCanvas.jsx (içinde) | Açık desteyi kapatır, klavye odağını desteye geri verir. Destede not kalmazsa ya da gruplama kapanırsa kendiliğinden çağrılır. | — | — | — |
+| `handleEditFromStack` | NoteCanvas.jsx (içinde) | Açık destedeki bir notun düzenleme düğmesine basılınca desteyi kapatır ve notu sayfanın üstündeki forma yükler (`onEdit`). | `note: Note` | — | — |
+| `toggleGrouped` | NoteCanvas.jsx (içinde) | "Etikete göre grupla"yı açar/kapatır, tercihi saklar, açık desteyi kapatır. | — | — | — |
 | `growArea` | NoteCanvas.jsx (içinde) | Kenardan kaydırırken gereken genişlik/yükseklik tuvalden büyükse tuvali (400 px payla, en fazla 20000 px'e kadar) büyütür. | `neededWidth: number`, `neededHeight: number` | — | — |
-| `startNoteDrag` | NoteCanvas.jsx (içinde) | Kart sürüklemesini yönetir: 4 px'lik eşikten sonra başlar, kartı imlecin yerine ama görünen alanın içine koyar, kart kenara dayandıkça tuvali her karede o yöne kaydırır. Bırakınca konumu `handleMove` ile kaydeder; sürükleme iptal olursa (`pointercancel`) kart eski yerine döner. | `event`, `{ note, x, y, setIsDragging }` (`x`/`y`: kartın Framer Motion değerleri) | — | — |
-| `placeCard` | NoteCanvas.jsx (startNoteDrag içinde) | Kartı imlecin gösterdiği yere, görünen alana sığdırarak koyar. | — | `{ overflowX, overflowY }` (kartın görünen alandan ne kadar taşmak istediği) | — |
-| `autoScroll` | NoteCanvas.jsx (startNoteDrag içinde) | Sürükleme boyunca her karede çalışır; kart kenara dayanıyorsa tuvali kaydırır (gerekirse `growArea`) ve kartı imlece yetiştirir. | — | — | — |
-| `CanvasNote` | NoteCanvas.jsx | Tuvaldeki tek sürüklenebilir kart; konumu Framer Motion `x`/`y` değerleriyle verilir, sürüklemeyi `onStartDrag` ile NoteCanvas yönetir. Sürüklenirken hafif büyür ve gölgesi artar. Sabitliyse sağ üstte raptiye rozeti gösterir. | `{ note, zIndex, onStartDrag(event, { note, x, y, setIsDragging }), onNoteChange, onNoteRemove, onEdit }` | Sarmalanmış `NoteCard` | — |
+| `handleAreaPointerDown` | NoteCanvas.jsx (içinde) | Tuvalin boş yerine basılınca tuvali kaydırmaya başlar (`startPan`); öğelere ve kaydırma çubuklarına basmak bunu başlatmaz. | `event` | — | — |
+| `zIndexOf` | NoteCanvas.jsx (içinde) | Öğenin katman sırasını verir: sabitli kartlar üst katmanda, son taşınan öğe en önde. | `key: string`, `isPinned: boolean` | `number` | — |
+| `CanvasNote` | NoteCanvas.jsx | Tuvaldeki tek sürüklenebilir kart; konumu Framer Motion `x`/`y` değerleriyle verilir, sürüklemeyi `startDrag` yönetir. Sürüklenirken hafif büyür ve gölgesi artar. Sabitliyse sağ üstte raptiye rozeti gösterir. | `{ note, position: { x, y }, zIndex, startDrag, onRaise(), onMove(note, x, y), onNoteChange, onNoteRemove, onEdit }` | Sarmalanmış `NoteCard` | — |
 | `handlePointerDown` | NoteCanvas.jsx (CanvasNote içinde) | Sürüklemeyi yalnızca kartın boş bir yerinden başlatır; düğme, alan, etiket/renk/hatırlatıcı kutularına basmak sürükleme başlatmaz. | `event` | — | — |
-| `placeUnpositionedNotes` | frontend/src/components/canvasLayout.js | Konumu olmayan notlara listedeki sırayla, sol üstten başlayarak ilk boş ızgara hücresini (240×220 px, 16 px aralık) verir; konumu olan notların kapladığı yerleri atlar. | `notes: Note[]`, `canvasWidth: number` | `{ [noteId]: { x, y } }` | — |
+| `useCanvasGestures` | frontend/src/components/useCanvasGestures.js | Tuvaldeki imleç hareketlerini yöneten hook: tuvali kaydırma ve öğe (kart/deste) sürükleme. Sayfadan çıkılınca yarım kalan hareketin dinleyicilerini kaldırır. | `viewportRef`, `onGrowArea(neededWidth, neededHeight)` | `{ isGrabbing: boolean, startPan(event), startDrag(event, options) }` | — |
+| `trackPointer` | useCanvasGestures.js (içinde) | İmleç bırakılana kadar pencere genelinde imleç hareketini dinler, bırakınca dinleyicileri kaldırır. Aynı anda tek hareket izlenir. | `onPointerMove(event)`, `onPointerEnd(event)` | — | — |
+| `startPan` | useCanvasGestures.js (içinde) | Tuvali imleçle birlikte kaydırır (imleç sağa gidince tuval sola kayar). | `event` | — | — |
+| `startDrag` | useCanvasGestures.js (içinde) | Öğe sürüklemesini yönetir: 4 px'lik eşikten sonra başlar, öğeyi imlecin yerine ama görünen alanın içine koyar, öğe kenara dayandıkça tuvali her karede o yöne kaydırır. Bırakınca `onDrop`, imleç kaydırılmadan bırakılınca `onClick` çağrılır; sürükleme iptal olursa (`pointercancel`) öğe eski yerine döner. | `event` (`currentTarget` = öğe), `{ x, y, onStart?(), onEnd?(), onDrop(x, y), onClick?() }` (`x`/`y`: Framer Motion değerleri) | — | — |
+| `placeItem` | useCanvasGestures.js (startDrag içinde) | Öğeyi imlecin gösterdiği yere, görünen alana sığdırarak koyar. | — | `{ overflowX, overflowY }` (öğenin görünen alandan ne kadar taşmak istediği) | — |
+| `autoScroll` | useCanvasGestures.js (startDrag içinde) | Sürükleme boyunca her karede çalışır; öğe kenara dayanıyorsa tuvali kaydırır (gerekirse `onGrowArea`) ve öğeyi imlece yetiştirir. | — | — | — |
+| `useRevealPopups` | frontend/src/components/useRevealPopups.js | Kendi içinde kayan bir kapsayıcıda (tuval, açık deste) bir kartın etiket/renk/hatırlatıcı kutusu açılınca kapsayıcıyı kutuyu gösterecek kadar kaydırır. | `containerRef` | — | — |
+| `TagStack` | frontend/src/components/TagStack.jsx | Tuvalde aynı etiketi taşıyan notların destesi: en üstteki 3 not üst üste ve hafif eğik görünür, üstte etiket adı ve not sayısı yazar; üzerine gelince deste hafifçe açılır. Tıklayınca (ya da Enter/Boşluk) açılır, sürükleyince taşınır. Açıkken soluk görünür. | `{ stack: { tag, notes }, position: { x, y }, zIndex, isOpen, startDrag, onRaise(), onMove(tag, x, y), onOpen(tagId, element) }` | Deste | — |
+| `open` / `handlePointerDown` / `handleKeyDown` | TagStack.jsx (içinde) | Desteyi açar / basınca sürüklemeyi başlatır (kaydırmadan bırakınca açar) / Enter ya da Boşluk ile açar. | — / `event` / `event` | — | — |
+| `StackPreviewCard` | TagStack.jsx | Destedeki notun küçük önizlemesi: başlık ve ilk 4 satır (liste notunda ilk 4 madde, ☐/☑ ile). Arkadaki kartlar yalnızca renkli kart olarak görünür. | `{ note: Note, index: number }` (0 = en üstteki) | Önizleme kartı | — |
+| `StackOverlay` | frontend/src/components/StackOverlay.jsx | Açılmış deste: arka plan kararır, kartlar destenin yerinden çıkıp ekranın ortasında bir ızgarada açılır; kartlar normal kullanılır. Boş yere basınca, kapatma düğmesiyle ya da Esc ile kartlar desteye geri dönerek kapanır (bir kartın açılır kutusu açıksa önce yalnızca o kapanır). AnimatePresence içinde kullanılır. | `{ stack: { tag, notes }, origin: { x, y }, onClose(), onNoteChange, onNoteRemove, onEdit }` | `document.body`'ye çizilen katman | — |
+| `handlePointerDown` / `handleClick` | StackOverlay.jsx (içinde) | Basışın boş yere mi olduğunu ve o anda açılır kutu açık mı olduğunu kaydeder / boş yere basıldıysa ve açık kutu yoksa desteyi kapatır. | `event` / — | — | — |
+| `ExpandedCard` | StackOverlay.jsx | Açık destedeki tek kart: açılışta destenin orta noktasından ızgaradaki yerine (art arda, yaylanarak), kapanışta ızgaradan desteye uçar; kapanış animasyonu bitince kaldırılır. | `{ note, index, count, origin, onNoteChange, onNoteRemove, onEdit }` | Sarmalanmış `NoteCard` | — |
+| `offsetToOrigin` | StackOverlay.jsx (ExpandedCard içinde) | Kartın ızgaradaki yerinden destenin orta noktasına uzaklığını, kartın o anki animasyonunu saymadan hesaplar. | — | `{ x, y }` (px) | — |
+| `placeUnpositionedItems` | frontend/src/components/canvasLayout.js | Tuvaldeki öğelerden (notlar ve desteler) konumu olmayanlara listedeki sırayla, sol üstten başlayarak ilk boş ızgara hücresini (240×220 px, 16 px aralık) verir; konumu olan öğelerin kapladığı yerleri atlar. | `items: { id, position_x, position_y }[]`, `canvasWidth: number` | `{ [id]: { x, y } }` | — |
+| `buildTagStacks` | canvasLayout.js | Etikete göre desteleri kurar: etiket listesindeki her etiket için o etiketi taşıyan notlar (birden çok etiketi olan not her destede). Destede sabitliler, sonra en son değişenler üstte; listede olmayan etiketler sayılmaz. | `notes: Note[]`, `tags: Tag[]` | `{ stacks: { tag, notes }[], freeNotes: Note[] }` | — |
+| `noteKey` / `tagKey` | canvasLayout.js | Tuvaldeki öğe anahtarını verir (`note:3`, `tag:5`); not ve etiket numaraları çakışmasın diye. | `id: number` | `string` | — |
 | `canvasColumnCount` | canvasLayout.js | Tuval genişliğine kaç kart sütunu sığdığını hesaplar (en az 1). | `canvasWidth: number` | `number` | — |
-| `isPlaced` / `overlaps` | canvasLayout.js | Notun konumu var mı / iki dikdörtgen çakışıyor mu. | `note` / `a`, `b` | `boolean` | — |
+| `isPlaced` / `overlaps` | canvasLayout.js | Öğenin konumu var mı / iki dikdörtgen çakışıyor mu. | `item` / `a`, `b` | `boolean` | — |
 | `clamp` | canvasLayout.js | Değeri `[min, max]` aralığına çeker. | `value`, `min`, `max: number` | `number` | — |
 | `overflowBeyond` | canvasLayout.js | Değerin aralığın ne kadar dışında olduğunu verir: üst sınırı aşınca artı, alt sınırın altında eksi, içindeyse 0. | `value`, `min`, `max: number` | `number` | — |
-| `edgeScrollStep` | canvasLayout.js | Kart kenarı `overflow` piksel zorlarken tuvalin bir karede kaç piksel kayacağını verir (işaret yönü belirtir, en fazla 24 px). | `overflow: number` | `number` | — |
+| `edgeScrollStep` | canvasLayout.js | Öğe kenarı `overflow` piksel zorlarken tuvalin bir karede kaç piksel kayacağını verir (işaret yönü belirtir, en fazla 24 px). | `overflow: number` | `number` | — |
 | `documentTop` | canvasLayout.js | Öğenin sayfanın en üstüne uzaklığını, animasyon dönüşümlerini saymadan hesaplar. | `element: HTMLElement` | `number` (px) | — |
 | `NoteForm` | frontend/src/components/NoteForm.jsx | "Not alın..." alanı: metin/liste türü seçimi, başlık, içerik ya da madde satırları, renk seçimi. Seçilen renk formun arka planına hemen uygulanır. Başlıkta Enter içeriğe/ilk maddeye geçer, maddede Enter yeni madde açar, boş maddede Backspace onu siler; form yalnızca "Not al"/"Kaydet" ile gönderilir. Yeni notu `createNote`, düzenlemeyi `updateNote` ile kaydeder. Düzenleme modunda liste maddeleri salt okunurdur (5. kişinin `/checklist` özelliği). | `{ editingNote?: Note \| null, onNoteSaved?(note), onCancelEdit?() }` | Ekleme/düzenleme formu; kayıtta `onNoteSaved` çağrılır | Kayıt başarısızsa formda hata mesajı (400 / 422) |
 | `buildNoteBody` | NoteForm.jsx (içinde) | Yeni not için API gövdesini kurar; `note_type` her zaman gönderilir (metin: başlık/içerik/renk; liste: başlık/renk/boş olmayan maddeler). | — | `NoteCreate` nesnesi | — |
@@ -545,6 +566,28 @@ kalkar (notlar silinmez).
 |---|---|---|
 | Etiket yok ya da başka kullanıcının | `NotFoundError` | 404 |
 
+#### `update_tag_position`
+
+- **Sorumlu kişi:** 3. kişi (ana sayfa tuvali için 2. kişiyle birlikte)
+- **Dosya:** backend/app/services/tags.py
+- **Uç nokta:** PATCH /tags/{tag_id}/position → 200
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Etiketin destesini ana sayfa tuvalinde yeni konuma taşır
+("Etikete göre grupla" açıkken aynı etiketli notlar bu konumda üst üste durur).
+
+**Girdi:** `db: Session`, `user: User`, `tag_id: int`, `position_x: int`, `position_y: int`
+(piksel; şema `TagPositionUpdate` ile 0–20000 arası doğrulanır)
+
+**Çıktı:** `Tag` (güncel konumuyla)
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Etiket yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Konum eksik, eksi ya da 20000'den büyük | (Pydantic doğrulaması) | 422 |
+
 #### `add_tag_to_note`
 
 - **Sorumlu kişi:** 3. kişi
@@ -656,6 +699,7 @@ birinde geçip geçmediğini söyler.
 | `create_tag` | backend/app/routers/tags.py | POST /tags | Gövde: `{ "name": str }`. Etiket oluşturur. | 201 `TagRead` | 401 / 409 / 422 |
 | `list_tags` | backend/app/routers/tags.py | GET /tags | Etiketleri listeler. | 200 `list[TagRead]` | 401 |
 | `delete_tag` | backend/app/routers/tags.py | DELETE /tags/{tag_id} | Etiketi siler. | 204 (boş) | 401 / 404 |
+| `update_tag_position` | backend/app/routers/tags.py | PATCH /tags/{tag_id}/position | Gövde: `{ "position_x": int, "position_y": int }`. Etiket destesinin tuvaldeki konumunu kaydeder. | 200 `TagRead` | 401 / 404 / 422 |
 | `add_tag_to_note` | backend/app/routers/tags.py | POST /tags/notes/{note_id}/tags/{tag_id} | Nota etiket ekler. | 204 (boş) | 401 / 404 |
 | `remove_tag_from_note` | backend/app/routers/tags.py | DELETE /tags/notes/{note_id}/tags/{tag_id} | Etiketi nottan çıkarır. | 204 (boş) | 401 / 404 |
 | `search_notes` | backend/app/routers/search.py | GET /search?q=&tag_id= | Notlarda arar; `q` en fazla 100 karakter. | 200 `list[NoteRead]` | 400 / 401 / 404 / 422 |
@@ -667,6 +711,7 @@ birinde geçip geçmediğini söyler.
 | `listTags` | frontend/src/api/tags.js | GET /tags çağırır. | — | `Promise<Tag[]>` | 401 → `ApiError` |
 | `createTag` | frontend/src/api/tags.js | POST /tags çağırır, sonra `notifyTagsChanged()`. | `name: string` | `Promise<Tag>` | 409 / 422 / 401 → `ApiError` |
 | `deleteTag` | frontend/src/api/tags.js | DELETE /tags/{id} çağırır, sonra `notifyTagsChanged({ deletedTagId })`. | `tagId: number` | `Promise<void>` | 404 / 401 → `ApiError` |
+| `updateTagPosition` | frontend/src/api/tags.js | PATCH /tags/{id}/position çağırır (etiket destesinin tuvaldeki yeri). | `tagId: number`, `positionX: number`, `positionY: number` | `Promise<Tag>` | 404 / 422 / 401 → `ApiError` |
 | `addTagToNote` | frontend/src/api/tags.js | POST /tags/notes/{noteId}/tags/{tagId} çağırır. | `noteId: number`, `tagId: number` | `Promise<null>` | 404 / 401 → `ApiError` |
 | `removeTagFromNote` | frontend/src/api/tags.js | DELETE /tags/notes/{noteId}/tags/{tagId} çağırır. | `noteId: number`, `tagId: number` | `Promise<null>` | 404 / 401 → `ApiError` |
 | `notifyTagsChanged` | frontend/src/api/tags.js | Etiket listesi değişti olayını yayınlar. | `detail = {}` (silmede `{ deletedTagId }`) | — | — |

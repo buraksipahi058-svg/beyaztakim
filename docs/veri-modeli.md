@@ -48,6 +48,8 @@ erDiagram
         int id PK
         int user_id FK
         string name
+        int position_x
+        int position_y
     }
     note_tags {
         int note_id PK, FK
@@ -118,6 +120,8 @@ Kullanıcının etiketleri. Etiketler kullanıcıya özeldir.
 | `id` | int | birincil anahtar | |
 | `user_id` | int | → `users.id`, zorunlu | Etiketin sahibi |
 | `name` | string(100) | zorunlu; aynı kullanıcıda benzersiz | Etiket adı |
+| `position_x` | int | boş olabilir | "Etikete göre grupla" açıkken bu etiketin destesinin ana sayfa tuvalindeki yatay konumu (piksel). Boşsa deste henüz yerleştirilmemiştir. |
+| `position_y` | int | boş olabilir | Destenin dikey konumu (piksel) |
 
 ### `note_tags` (ara tablo)
 

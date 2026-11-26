@@ -1,5 +1,49 @@
 /* Sahibi: 2. kişi (Not İşlemleri) */
 
+/* Tuvalin üstündeki satır: kısa açıklama ve "Etikete göre grupla" düğmesi. */
+.note-canvas__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 12px;
+}
+
+.note-canvas__hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.note-canvas__group-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.note-canvas__group-toggle:hover {
+  background: var(--hover);
+}
+
+.note-canvas__group-toggle--on,
+.note-canvas__group-toggle--on:hover {
+  border-color: transparent;
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
 /* Tuvalin görünen kısmı: sayfadan koyu, çerçeveli ve kendi içinde kayan bir alan.
    Yüksekliği NoteCanvas.jsx pencereye göre verir. */
 .note-canvas {

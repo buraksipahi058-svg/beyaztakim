@@ -155,6 +155,41 @@ def test_remove_tag_with_missing_note_raises_not_found(db_session, seed_user):
         tag_service.remove_tag_from_note(db_session, seed_user, 9999, tag.id)
 
 
+# --- Tuvaldeki deste konumu --------------------------------------------------
+
+
+def test_new_tag_has_no_position(db_session, seed_user):
+    tag = make_tag(db_session, seed_user, "okul")
+
+    assert (tag.position_x, tag.position_y) == (None, None)
+
+
+def test_update_tag_position_saves_position(db_session, seed_user):
+    tag = make_tag(db_session, seed_user, "okul")
+
+    updated = tag_service.update_tag_position(db_session, seed_user, tag.id, 320, 48)
+
+    db_session.expire_all()
+    saved = db_session.get(Tag, tag.id)
+    assert (updated.position_x, updated.position_y) == (320, 48)
+    assert (saved.position_x, saved.position_y) == (320, 48)
+
+
+def test_update_other_users_tag_position_raises_not_found(db_session, seed_user):
+    other_tag = make_tag(db_session, make_user(db_session), "okul")
+
+    with pytest.raises(NotFoundError):
+        tag_service.update_tag_position(db_session, seed_user, other_tag.id, 10, 10)
+
+    db_session.expire_all()
+    assert db_session.get(Tag, other_tag.id).position_x is None
+
+
+def test_update_missing_tag_position_raises_not_found(db_session, seed_user):
+    with pytest.raises(NotFoundError):
+        tag_service.update_tag_position(db_session, seed_user, 9999, 10, 10)
+
+
 # --- Uç noktalar -------------------------------------------------------------
 
 
@@ -212,5 +247,48 @@ def test_note_tag_endpoints_add_and_remove(authed_client, db_session, seed_user)
 
 def test_get_tags_without_login_returns_401(client):
     response = client.get("/tags")
+
+    assert response.status_code == 401
+
+
+def test_patch_tag_position_endpoint_returns_tag_with_position(authed_client, db_session, seed_user):
+    tag = make_tag(db_session, seed_user, "okul")
+
+    response = authed_client.patch(
+        f"/tags/{tag.id}/position", json={"position_x": 512, "position_y": 236}
+    )
+    listed = authed_client.get("/tags").json()
+
+    assert response.status_code == 200
+    assert response.json() == {"id": tag.id, "name": "okul", "position_x": 512, "position_y": 236}
+    assert {"id": tag.id, "name": "okul", "position_x": 512, "position_y": 236} in listed
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"position_x": -1, "position_y": 0},
+        {"position_x": 0, "position_y": 20001},
+        {"position_x": 10},
+    ],
+)
+def test_patch_tag_position_endpoint_rejects_invalid_position(
+    authed_client, db_session, seed_user, body
+):
+    tag = make_tag(db_session, seed_user, "okul")
+
+    response = authed_client.patch(f"/tags/{tag.id}/position", json=body)
+
+    assert response.status_code == 422
+
+
+def test_patch_missing_tag_position_endpoint_returns_404(authed_client):
+    response = authed_client.patch("/tags/9999/position", json={"position_x": 0, "position_y": 0})
+
+    assert response.status_code == 404
+
+
+def test_patch_tag_position_without_login_returns_401(client):
+    response = client.patch("/tags/1/position", json={"position_x": 0, "position_y": 0})
 
     assert response.status_code == 401

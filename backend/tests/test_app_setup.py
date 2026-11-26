@@ -72,12 +72,14 @@ def test_read_schemas_send_dates_with_utc_marker():
 
 
 def make_database_without_position_columns():
-    """Konum sütunları eklenmeden önceki bir veritabanını taklit eder (içinde bir not var)."""
+    """Konum sütunları (notlar ve etiketler) eklenmeden önceki bir veritabanını taklit eder
+    (içinde bir not var)."""
     engine = build_engine("sqlite://")
     create_tables(engine)
     with engine.begin() as connection:
-        connection.execute(text("ALTER TABLE notes DROP COLUMN position_x"))
-        connection.execute(text("ALTER TABLE notes DROP COLUMN position_y"))
+        for table in ("notes", "tags"):
+            connection.execute(text(f"ALTER TABLE {table} DROP COLUMN position_x"))
+            connection.execute(text(f"ALTER TABLE {table} DROP COLUMN position_y"))
         connection.execute(
             text(
                 "INSERT INTO users (id, email, password_hash, created_at) "
@@ -100,10 +102,17 @@ def test_add_missing_columns_adds_new_nullable_columns_and_keeps_rows():
     added = add_missing_columns(engine)
 
     columns = {column["name"] for column in inspect(engine).get_columns("notes")}
+    tag_columns = {column["name"] for column in inspect(engine).get_columns("tags")}
     with engine.connect() as connection:
         row = connection.execute(text("SELECT title, position_x FROM notes WHERE id = 1")).one()
-    assert {"notes.position_x", "notes.position_y"} <= set(added)
+    assert {
+        "notes.position_x",
+        "notes.position_y",
+        "tags.position_x",
+        "tags.position_y",
+    } <= set(added)
     assert {"position_x", "position_y"} <= columns
+    assert {"position_x", "position_y"} <= tag_columns
     assert row == ("Eski not", None)
 
 

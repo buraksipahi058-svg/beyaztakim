@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User
-from app.schemas.tags import TagCreate, TagRead
+from app.schemas.tags import TagCreate, TagPositionUpdate, TagRead
 from app.services import tags as tag_service
 
 router = APIRouter(prefix="/tags", tags=["etiketler"])
@@ -44,6 +44,17 @@ def delete_tag(
 ):
     """Kullanıcının etiketini siler."""
     tag_service.delete_tag(db, user, tag_id)
+
+
+@router.patch("/{tag_id}/position", response_model=TagRead)
+def update_tag_position(
+    tag_id: int,
+    data: TagPositionUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Etiket destesinin ana sayfa tuvalindeki konumunu kaydeder."""
+    return tag_service.update_tag_position(db, user, tag_id, data.position_x, data.position_y)
 
 @router.post("/notes/{note_id}/tags/{tag_id}", status_code=status.HTTP_204_NO_CONTENT)
 def add_tag_to_note(

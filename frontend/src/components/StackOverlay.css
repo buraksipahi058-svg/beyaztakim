@@ -1,0 +1,77 @@
+/* Sahibi: 2. kişi (Not İşlemleri) */
+
+/* Açılmış deste tüm pencereyi kaplar (etiket düzenleme penceresinin altında kalır). */
+.stack-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+}
+
+.stack-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(32, 33, 36, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+/* Kartlar ekranın ortasında; sığmazsa bu alan kendi içinde kayar. */
+.stack-overlay__content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  padding: 48px 24px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.stack-overlay__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 4px 4px 4px 16px;
+  border-radius: 24px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.stack-overlay__title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.stack-overlay__count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.stack-overlay__close {
+  width: 36px;
+  height: 36px;
+}
+
+/* Kartların ızgarası. Kart konumları buna göre ölçülür (position: relative). */
+.stack-overlay__grid {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: min(100%, 1040px);
+}
+
+/* Kart, açılış animasyonu başlayana kadar görünmez (ilk karede ızgarada belirmesin). */
+.stack-overlay__card {
+  width: 240px;
+  opacity: 0;
+}
+
+/* Açılır kutu görünür yapılırken kenara yapışmasın. */
+.stack-overlay :is(.tag-picker, .color-palette, .reminder-picker) {
+  scroll-margin: 12px;
+}
