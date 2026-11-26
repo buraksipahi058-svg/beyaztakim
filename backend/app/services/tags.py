@@ -12,11 +12,18 @@ from sqlalchemy.orm import Session
 
 from app.models import Note, Tag, User
 from app.schemas.tags import TagCreate
-from app.services.errors import NotFoundError
+from app.services.errors import ConflictError, NotFoundError
 
 
 def create_tag(db: Session, user: User, data: TagCreate) -> Tag:
-    """Kullanıcı için yeni bir etiket oluşturur."""
+    """Kullanıcı için yeni bir etiket oluşturur.
+
+    Kullanıcının aynı adda bir etiketi varsa ConflictError (409) fırlatır.
+    """
+    existing = db.scalar(select(Tag).where(Tag.user_id == user.id, Tag.name == data.name))
+    if existing is not None:
+        raise ConflictError("Bu adda bir etiketiniz zaten var.")
+
     tag = Tag(
         user_id=user.id,
         name=data.name,

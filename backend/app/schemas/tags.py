@@ -3,12 +3,17 @@
 Sahibi: 3. kişi (Etiket ve Arama)
 Ortak okuma şemaları (NoteRead vb.): app/schemas/common.py
 """
-from pydantic import BaseModel, Field, ConfigDict
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, StringConstraints
 
 
 class TagCreate(BaseModel):
-    """Yeni etiket oluşturma isteği."""
-    name: str = Field(min_length=1, max_length=100)
+    """Yeni etiket oluşturma isteği.
+
+    Baştaki ve sondaki boşluklar silinir; yalnızca boşluktan oluşan ad kabul edilmez.
+    """
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
 
 
 class TagRead(BaseModel):

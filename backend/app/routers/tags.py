@@ -17,7 +17,7 @@ from app.services import tags as tag_service
 router = APIRouter(prefix="/tags", tags=["etiketler"])
 
 
-@router.post("/", response_model=TagRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TagRead, status_code=status.HTTP_201_CREATED)
 def create_tag(
     data: TagCreate,
     db: Session = Depends(get_db),
@@ -27,7 +27,7 @@ def create_tag(
     return tag_service.create_tag(db, user, data)
 
 
-@router.get("/", response_model=list[TagRead])
+@router.get("", response_model=list[TagRead])
 def list_tags(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -63,4 +63,4 @@ def remove_tag_from_note(
     user: User = Depends(get_current_user),
 ):
     """Kullanıcının notundan etiketi kaldırır."""
-    tag_service.remove_tag_from_note(db, user, note_id, tag_id)    
+    tag_service.remove_tag_from_note(db, user, note_id, tag_id)

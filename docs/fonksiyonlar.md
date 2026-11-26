@@ -273,7 +273,120 @@ içleri gerçek API ile çalışacak şekilde dolduruldu (durum: Tamamlandı).
 
 ### Fonksiyonlar
 
-_Henüz eklenmedi._
+#### `create_tag`
+
+- **Sorumlu kişi:** 3. kişi
+- **Dosya:** backend/app/services/tags.py
+- **Uç nokta:** POST /tags → 201 `TagRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcı için yeni bir etiket oluşturur. Adın başındaki ve
+sonundaki boşluklar silinir; aynı kullanıcının aynı adda iki etiketi olamaz
+(farklı kullanıcılar aynı adı kullanabilir).
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Etiketin sahibi (`get_current_user` verir) |
+| `data` | `TagCreate` (name: 1-100 karakter) | Evet | İstek gövdesi |
+
+**Çıktı:** `Tag`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Kullanıcının aynı adda etiketi var | `ConflictError` | 409 |
+| Ad boş, yalnızca boşluk ya da 100 karakterden uzun | (Pydantic) | 422 |
+
+#### `list_tags`
+
+- **Sorumlu kişi:** 3. kişi
+- **Dosya:** backend/app/services/tags.py
+- **Uç nokta:** GET /tags → 200 `list[TagRead]`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcının etiketlerini ada göre alfabetik sırayla döndürür.
+
+**Girdi:** `db: Session`, `user: User`
+
+**Çıktı:** `list[Tag]`
+
+**Hata durumları:** —
+
+#### `delete_tag`
+
+- **Sorumlu kişi:** 3. kişi
+- **Dosya:** backend/app/services/tags.py
+- **Uç nokta:** DELETE /tags/{tag_id} → 204
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcının etiketini siler; etiketin notlarla bağları da
+kalkar (notlar silinmez).
+
+**Girdi:** `db: Session`, `user: User`, `tag_id: int`
+
+**Çıktı:** `None`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Etiket yok ya da başka kullanıcının | `NotFoundError` | 404 |
+
+#### `add_tag_to_note`
+
+- **Sorumlu kişi:** 3. kişi
+- **Dosya:** backend/app/services/tags.py
+- **Uç nokta:** POST /tags/notes/{note_id}/tags/{tag_id} → 204
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcının etiketini kullanıcının notuna bağlar. Etiket notta
+zaten varsa bir şey değişmez.
+
+**Girdi:** `db: Session`, `user: User`, `note_id: int`, `tag_id: int`
+
+**Çıktı:** `None`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Etiket yok ya da başka kullanıcının | `NotFoundError` | 404 |
+
+#### `remove_tag_from_note`
+
+- **Sorumlu kişi:** 3. kişi
+- **Dosya:** backend/app/services/tags.py
+- **Uç nokta:** DELETE /tags/notes/{note_id}/tags/{tag_id} → 204
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Etiketi nottan çıkarır; etiketin kendisi silinmez. Etiket notta
+yoksa bir şey değişmez.
+
+**Girdi:** `db: Session`, `user: User`, `note_id: int`, `tag_id: int`
+
+**Çıktı:** `None`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Etiket yok ya da başka kullanıcının | `NotFoundError` | 404 |
+
+### Uç noktalar (router)
+
+| Fonksiyon | Dosya | Uç nokta | Ne yapar | Çıktı | Hata durumları |
+|---|---|---|---|---|---|
+| `create_tag` | backend/app/routers/tags.py | POST /tags | Gövde: `{ "name": str }`. Etiket oluşturur. | 201 `TagRead` | 401 / 409 / 422 |
+| `list_tags` | backend/app/routers/tags.py | GET /tags | Etiketleri listeler. | 200 `list[TagRead]` | 401 |
+| `delete_tag` | backend/app/routers/tags.py | DELETE /tags/{tag_id} | Etiketi siler. | 204 (boş) | 401 / 404 |
+| `add_tag_to_note` | backend/app/routers/tags.py | POST /tags/notes/{note_id}/tags/{tag_id} | Nota etiket ekler. | 204 (boş) | 401 / 404 |
+| `remove_tag_from_note` | backend/app/routers/tags.py | DELETE /tags/notes/{note_id}/tags/{tag_id} | Etiketi nottan çıkarır. | 204 (boş) | 401 / 404 |
 
 ---
 
