@@ -1,13 +1,143 @@
+/* Sahibi: 3. kişi (Etiket ve Arama) */
+
 .note-card__tags {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
   margin-top: 12px;
 }
 
 .note-card__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   padding: 2px 10px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.08);
   font-size: 0.78rem;
+}
+
+.note-tags__remove {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-right: -6px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.note-tags__remove:hover {
+  background: rgba(0, 0, 0, 0.12);
+  color: var(--text);
+}
+
+.note-tags__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px dashed rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* "Etiket" düğmesi kartın üzerine gelince görünür (dokunmatik ekranda hep görünür). */
+.note-card:hover .note-tags__add,
+.note-tags__add:focus-visible,
+.note-tags__add[aria-expanded='true'] {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .note-tags__add {
+    opacity: 1;
+  }
+}
+
+/* Etiket kutusu açıkken kart, yanındaki kartların üstüne çıksın. */
+.note-card:has(.tag-picker) {
+  z-index: 20;
+}
+
+.tag-picker {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  width: 230px;
+  padding: 10px 0 6px;
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.tag-picker__title {
+  margin: 0 12px 6px;
+  font-size: 0.85rem;
+}
+
+.tag-picker__input {
+  width: calc(100% - 24px);
+  margin: 0 12px 6px;
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.tag-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.tag-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.tag-picker__option:hover,
+.tag-picker__create:hover {
+  background: var(--hover);
+}
+
+.tag-picker__create {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tag-picker .note-action-error {
+  margin: 4px 12px 0;
 }
