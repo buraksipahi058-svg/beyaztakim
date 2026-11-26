@@ -1,16 +1,48 @@
-import { useState } from 'react';
+// Sahibi: 2. kişi (Not İşlemleri)
+//
+// Ana sayfa. Notlar src/api/notes.js üzerinden gerçek API'den gelir; arşivdeki
+// ve çöp kutusundaki notlar API zaten döndürmez. Notlar iki ızgarada
+// gösterilir: "Sabitlenenler" ve "Diğerleri".
+
+import { useEffect, useState } from 'react';
+import { listNotes } from '../api/notes.js';
 import EmptyState from '../components/EmptyState.jsx';
 import NoteForm from '../components/NoteForm.jsx';
 import NoteGrid from '../components/NoteGrid.jsx';
-import { sampleNotes } from '../api/sampleNotes.js';
 
 // Sahibi: 2. kişi (Not İşlemleri)
-//
-// Ana sayfa. Notlar API'si yazılana kadar sampleNotes ile çalışır; böylece
-// 3, 4 ve 5. kişi kart üzerindeki düğmelerini API'yi beklemeden deneyebilir.
-// API hazır olunca sampleNotes yerine src/api/notes.js'teki fonksiyon kullanılacak.
 export default function HomePage() {
-  const [notes, setNotes] = useState(sampleNotes);
+  const [notes, setNotes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [editingNote, setEditingNote] = useState(null);
+
+  useEffect(() => {
+    let isActive = true;
+    listNotes()
+      .then((loadedNotes) => {
+        if (isActive) setNotes(loadedNotes);
+      })
+      .catch((listError) => {
+        if (isActive) setLoadError(listError.message || 'Notlar yüklenemedi.');
+      })
+      .finally(() => {
+        if (isActive) setIsLoading(false);
+      });
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  // Formdan kaydedilen not: listede yoksa en üste eklenir, varsa güncellenir.
+  function handleNoteSaved(savedNote) {
+    setNotes((current) =>
+      current.some((note) => note.id === savedNote.id)
+        ? current.map((note) => (note.id === savedNote.id ? savedNote : note))
+        : [savedNote, ...current],
+    );
+    setEditingNote(null);
+  }
 
   function handleNoteChange(updatedNote) {
     setNotes((current) => current.map((note) => (note.id === updatedNote.id ? updatedNote : note)));
@@ -20,16 +52,28 @@ export default function HomePage() {
     setNotes((current) => current.filter((note) => note.id !== noteId));
   }
 
+  function handleCancelEdit() {
+    setEditingNote(null);
+  }
+
   const pinned = notes.filter((note) => note.is_pinned);
   const others = notes.filter((note) => !note.is_pinned);
-  const gridProps = { onNoteChange: handleNoteChange, onNoteRemove: handleNoteRemove };
+  const gridProps = {
+    onNoteChange: handleNoteChange,
+    onNoteRemove: handleNoteRemove,
+    onEdit: setEditingNote,
+  };
 
   return (
     <>
-      <NoteForm />
-      <p className="page-hint">Bu sayfadaki notlar örnek veridir.</p>
+      <NoteForm editingNote={editingNote} onNoteSaved={handleNoteSaved} onCancelEdit={handleCancelEdit} />
 
-      {notes.length === 0 && <EmptyState icon="lightbulb" message="Eklediğiniz notlar burada görünür" />}
+      {isLoading && <p className="page-hint">Notlar yükleniyor...</p>}
+      {loadError && <p className="page-hint">{loadError}</p>}
+
+      {!isLoading && !loadError && notes.length === 0 && (
+        <EmptyState icon="lightbulb" message="Eklediğiniz notlar burada görünür" />
+      )}
 
       {pinned.length > 0 && (
         <section className="note-section">

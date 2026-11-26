@@ -41,3 +41,10 @@
 .note-card__actions:empty {
   display: none;
 }
+
+/* 2. kişinin düzenleme düğmesi (sağ uca yaslanır). */
+.note-card__edit {
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+}

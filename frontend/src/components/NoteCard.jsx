@@ -5,6 +5,7 @@ import NoteTags from './note-card/NoteTags.jsx';
 import PinColorActions from './note-card/PinColorActions.jsx';
 import ReminderChip from './note-card/ReminderChip.jsx';
 import { noteColor } from './noteColors.js';
+import Icon from './Icon.jsx';
 import './NoteCard.css';
 
 export const cardVariants = {
@@ -23,7 +24,9 @@ export const cardVariants = {
 //   note               : gösterilen not
 //   onNoteChange(note) : not değişince (ör. renk, sabitleme) güncel notla çağrılır
 //   onNoteRemove(id)   : not bu listeden çıkınca (ör. arşivlendi) çağrılır
-export default function NoteCard({ note, onNoteChange, onNoteRemove }) {
+// Ek olarak 2. kişinin düzenleme düğmesi:
+//   onEdit(note)       : düzenleme isteğinde notla çağrılır (verilmezse düğme gizli)
+export default function NoteCard({ note, onNoteChange, onNoteRemove, onEdit }) {
   const slotProps = { note, onNoteChange, onNoteRemove };
   const isChecklist = note.note_type === 'checklist';
 
@@ -51,6 +54,17 @@ export default function NoteCard({ note, onNoteChange, onNoteRemove }) {
       <div className="note-card__actions">
         <PinColorActions {...slotProps} />
         <ArchiveTrashActions {...slotProps} />
+        {onEdit && (
+          <button
+            type="button"
+            className="icon-button note-card__edit"
+            onClick={() => onEdit(note)}
+            title="Notu düzenle"
+            aria-label="Notu düzenle"
+          >
+            <Icon name="edit" size={18} />
+          </button>
+        )}
       </div>
     </motion.article>
   );

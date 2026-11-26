@@ -11,8 +11,8 @@ const gridVariants = {
 //
 // Not kartlarını ızgara halinde, sırayla belirerek gösterir. Listeden çıkan
 // kart küçülerek kaybolur, kalanlar yerine kayar.
-// onNoteChange ve onNoteRemove her karta iletilir (bkz. NoteCard.jsx).
-export default function NoteGrid({ notes, onNoteChange, onNoteRemove }) {
+// onNoteChange, onNoteRemove ve onEdit her karta iletilir (bkz. NoteCard.jsx).
+export default function NoteGrid({ notes, onNoteChange, onNoteRemove, onEdit }) {
   return (
     <motion.div className="note-grid" variants={gridVariants} initial="hidden" animate="visible">
       <AnimatePresence>
@@ -22,6 +22,7 @@ export default function NoteGrid({ notes, onNoteChange, onNoteRemove }) {
             note={note}
             onNoteChange={onNoteChange}
             onNoteRemove={onNoteRemove}
+            onEdit={onEdit}
           />
         ))}
       </AnimatePresence>
