@@ -6,68 +6,63 @@ ikinci parametre olarak `user: User` alır. Hatalar app/services/errors.py'deki
 sınıflarla bildirilir.
 """
 
-
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-from app.models import ChecklistItem, Note
+
+from app.models import NOTE_TYPE_CHECKLIST, ChecklistItem, Note, User
 from app.schemas.checklist import ChecklistItemCreate, ChecklistItemUpdate
+from app.services import notes as notes_service
+from app.services.errors import NotFoundError, ValidationError
 
-class NoteNotFoundError(Exception):
-    def __init__(self, note_id: int):
-        self.note_id = note_id
-        super().__init__(f"Note with ID {note_id} not found.")
 
-# Özel bir hata sınıfı: Liste maddesi bulunamazsa fırlatılacak
-class ChecklistItemNotFoundError(Exception):
-    def __init__(self, item_id: int):
-        self.item_id = item_id
-        super().__init__(f"Checklist item with ID {item_id} not found.")
+def _get_item(db: Session, user: User, item_id: int) -> ChecklistItem:
+    """Kullanıcının notlarından birine ait maddeyi döndürür."""
+    item = db.scalar(
+        select(ChecklistItem)
+        .join(Note)
+        .where(ChecklistItem.id == item_id, Note.user_id == user.id)
+    )
+    if item is None:
+        raise NotFoundError("Liste maddesi bulunamadı.")
+    return item
 
-def add_checklist_item(db: Session, note_id: int, user_id: int, item_in: ChecklistItemCreate) -> ChecklistItem:
-    """Belirtilen nota yeni bir liste maddesi ekler."""
-    # 1. Notun var olup olmadığını ve kullanıcıya ait olup olmadığını kontrol et
-    note = db.query(Note).filter(Note.id == note_id, Note.user_id == user_id).first()
-    if not note:
-        raise NoteNotFoundError(note_id)
 
-    # 2. Yeni maddeyi oluştur ve veritabanına ekle
-    new_item = ChecklistItem(note_id=note_id, text=item_in.text)
-    db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
-    return new_item
+def add_checklist_item(
+    db: Session, user: User, note_id: int, data: ChecklistItemCreate
+) -> ChecklistItem:
+    """Liste notunun sonuna yeni bir madde ekler (position: son sıra + 1)."""
+    note = notes_service.get_note(db, user, note_id)
+    if note.note_type != NOTE_TYPE_CHECKLIST:
+        raise ValidationError("Yalnızca liste notlarına madde eklenebilir.")
 
-def update_checklist_item(db: Session, item_id: int, user_id: int, item_in: ChecklistItemUpdate) -> ChecklistItem:
-    """Var olan bir liste maddesinin metnini veya tamamlanma durumunu günceller."""
-    # 1. Maddeyi bul (ve kullanıcının erişim izni olduğunu doğrulamak için Note tablosuyla birleştir)
-    item = db.query(ChecklistItem).join(Note).filter(
-        ChecklistItem.id == item_id, 
-        Note.user_id == user_id
-    ).first()
-    
-    if not item:
-        raise ChecklistItemNotFoundError(item_id)
-
-    # 2. Gönderilen verileri güncelle (None olmayanları)
-    if item_in.text is not None:
-        item.text = item_in.text
-    if item_in.is_completed is not None:
-        item.is_completed = item_in.is_completed
-
+    last_position = db.scalar(
+        select(func.max(ChecklistItem.position)).where(ChecklistItem.note_id == note.id)
+    )
+    item = ChecklistItem(
+        note_id=note.id,
+        text=data.text,
+        position=0 if last_position is None else last_position + 1,
+    )
+    db.add(item)
     db.commit()
     db.refresh(item)
     return item
 
-def delete_checklist_item(db: Session, item_id: int, user_id: int) -> None:
-    """Belirtilen liste maddesini siler."""
-    # 1. Maddeyi bul
-    item = db.query(ChecklistItem).join(Note).filter(
-        ChecklistItem.id == item_id, 
-        Note.user_id == user_id
-    ).first()
-    
-    if not item:
-        raise ChecklistItemNotFoundError(item_id)
 
-    # 2. Maddeyi sil
+def update_checklist_item(
+    db: Session, user: User, item_id: int, data: ChecklistItemUpdate
+) -> ChecklistItem:
+    """Maddenin metnini ve/veya işaretini günceller; gönderilmeyen alanlar korunur."""
+    item = _get_item(db, user, item_id)
+    for field, value in data.model_dump(exclude_none=True).items():
+        setattr(item, field, value)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+def delete_checklist_item(db: Session, user: User, item_id: int) -> None:
+    """Maddeyi siler."""
+    item = _get_item(db, user, item_id)
     db.delete(item)
     db.commit()

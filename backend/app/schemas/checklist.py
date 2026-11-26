@@ -2,26 +2,26 @@
 
 Sahibi: 5. kişi (Liste Notları, Hatırlatıcı, Sabitleme, Renk)
 Ortak okuma şemaları (NoteRead vb.): app/schemas/common.py
+Yanıtlarda ortak ChecklistItemRead (id, text, is_done, position) kullanılır.
 """
 
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
 
-# 1. Yeni bir liste maddesi eklenirken beklenen veri
+CHECKLIST_ITEM_TEXT_MAX_LENGTH = 500
+
+
 class ChecklistItemCreate(BaseModel):
-    text: str
+    """Yeni liste maddesi isteği gövdesi (POST /checklist/{note_id}/items)."""
 
-# 2. Var olan bir madde güncellenirken beklenen veri (metin değişebilir veya kutu işaretlenebilir)
+    text: str = Field(default="", max_length=CHECKLIST_ITEM_TEXT_MAX_LENGTH)
+
+
 class ChecklistItemUpdate(BaseModel):
-    text: Optional[str] = None
-    is_completed: Optional[bool] = None
+    """Madde güncelleme isteği gövdesi (PATCH /checklist/items/{item_id}).
 
-# 3. Veritabanından frontend'e gönderilecek madde verisi
-class ChecklistItemResponse(BaseModel):
-    id: int
-    note_id: int
-    text: str
-    is_completed: bool
+    Metin değiştirilebilir ya da kutu işaretlenebilir; yalnızca gönderilen
+    alanlar güncellenir.
+    """
 
-    class Config:
-        from_attributes = True
+    text: str | None = Field(default=None, max_length=CHECKLIST_ITEM_TEXT_MAX_LENGTH)
+    is_done: bool | None = None

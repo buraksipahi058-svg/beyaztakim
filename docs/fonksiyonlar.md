@@ -314,7 +314,108 @@ _Henüz eklenmedi._
 
 ### Fonksiyonlar
 
-_Henüz eklenmedi._
+#### `_get_item`
+
+- **Sorumlu kişi:** 5. kişi
+- **Dosya:** backend/app/services/checklist.py
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Kullanıcının notlarından birine ait liste maddesini döndürür
+(madde, notuyla birleştirilip `Note.user_id` koşuluyla aranır).
+
+**Girdi:** `db: Session`, `user: User`, `item_id: int`
+
+**Çıktı:** `ChecklistItem`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Madde yok ya da başka kullanıcının notunda | `NotFoundError` | 404 |
+
+#### `add_checklist_item`
+
+- **Sorumlu kişi:** 5. kişi
+- **Dosya:** backend/app/services/checklist.py
+- **Uç nokta:** POST /checklist/{note_id}/items → 201 `ChecklistItemRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Liste notunun sonuna yeni bir madde ekler. Yeni maddenin sırası
+(`position`) notun son maddesinin bir fazlasıdır; not boşsa 0.
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Notun sahibi (`get_current_user` verir) |
+| `note_id` | `int` | Evet | Yoldan gelen not kimliği |
+| `data` | `ChecklistItemCreate` (text, en fazla 500 karakter) | Evet | İstek gövdesi |
+
+**Çıktı:** `ChecklistItem`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Not yok ya da başka kullanıcının | `NotFoundError` | 404 |
+| Not liste türünde değil (`note_type` = `"text"`) | `ValidationError` | 400 |
+| Metin 500 karakterden uzun | (Pydantic) | 422 |
+
+#### `update_checklist_item`
+
+- **Sorumlu kişi:** 5. kişi
+- **Dosya:** backend/app/services/checklist.py
+- **Uç nokta:** PATCH /checklist/items/{item_id} → 200 `ChecklistItemRead`
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Maddenin metnini ve/veya işaretini (`is_done`) günceller;
+gönderilmeyen alanlar olduğu gibi kalır.
+
+**Girdi:**
+
+| Parametre | Tip | Zorunlu | Açıklama |
+|---|---|---|---|
+| `db` | `Session` | Evet | Veritabanı oturumu |
+| `user` | `User` | Evet | Maddenin bulunduğu notun sahibi |
+| `item_id` | `int` | Evet | Yoldan gelen madde kimliği |
+| `data` | `ChecklistItemUpdate` (text, is_done; ikisi de isteğe bağlı) | Evet | İstek gövdesi |
+
+**Çıktı:** `ChecklistItem`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Madde yok ya da başka kullanıcının notunda | `NotFoundError` | 404 |
+| Metin 500 karakterden uzun | (Pydantic) | 422 |
+
+#### `delete_checklist_item`
+
+- **Sorumlu kişi:** 5. kişi
+- **Dosya:** backend/app/services/checklist.py
+- **Uç nokta:** DELETE /checklist/items/{item_id} → 204
+- **Durum:** Tamamlandı
+
+**Ne yapar?** Maddeyi siler.
+
+**Girdi:** `db: Session`, `user: User`, `item_id: int`
+
+**Çıktı:** `None`
+
+**Hata durumları:**
+
+| Durum | Hata sınıfı | HTTP kodu |
+|---|---|---|
+| Madde yok ya da başka kullanıcının notunda | `NotFoundError` | 404 |
+
+### Uç noktalar (router)
+
+| Fonksiyon | Dosya | Uç nokta | Ne yapar | Çıktı | Hata durumları |
+|---|---|---|---|---|---|
+| `add_item` | backend/app/routers/checklist.py | POST /checklist/{note_id}/items | Gövde: `{ "text": str }`. Liste notuna madde ekler. | 201 `ChecklistItemRead` | 400 / 401 / 404 / 422 |
+| `update_item` | backend/app/routers/checklist.py | PATCH /checklist/items/{item_id} | Gövde: `{ "text"?: str, "is_done"?: bool }`. Maddeyi günceller. | 200 `ChecklistItemRead` | 401 / 404 / 422 |
+| `delete_item` | backend/app/routers/checklist.py | DELETE /checklist/items/{item_id} | Maddeyi siler. | 204 (boş) | 401 / 404 |
 
 ---
 
