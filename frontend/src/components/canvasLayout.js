@@ -1,9 +1,47 @@
 // Sahibi: 2. kişi (Not İşlemleri)
-// Ana sayfa tuvalinin ölçüleri ve konumu olmayan notların otomatik yerleşimi.
+// Ana sayfa tuvalinin ölçüleri, konumu olmayan notların otomatik yerleşimi ve
+// sürükleme sırasında kullanılan küçük hesaplar.
 
 export const CANVAS_CARD_WIDTH = 240;
 export const CANVAS_CELL_HEIGHT = 220;
 export const CANVAS_GAP = 16;
+// Kartlar tuvalin kenarına yapışmasın diye konum (0, 0) kenardan bu kadar içeride çizilir.
+export const CANVAS_PADDING = 12;
+// En sağdaki ve en alttaki kartın ötesinde bırakılan boş alan: tuval o kadar
+// kaydırılabilir, açılır kutular da kesilmez.
+export const CANVAS_EXTRA_SPACE = 400;
+// Backend'deki NOTE_POSITION_MAX ile aynı: bir kart en fazla bu koordinata gidebilir.
+export const CANVAS_POSITION_MAX = 20000;
+// Kart tuvalin görünen kenarına dayanınca tuval kare başına en fazla bu kadar kayar.
+const EDGE_SCROLL_MAX_STEP = 24;
+
+// Değeri [min, max] aralığına çeker.
+export function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+// Değer aralığın ne kadar dışında: sağda/altta artı, solda/üstte eksi, içindeyse 0.
+export function overflowBeyond(value, min, max) {
+  if (value > max) return value - max;
+  if (value < min) return value - min;
+  return 0;
+}
+
+// Kart görünen kenarı `overflow` piksel zorlarken tuvalin bu karede kaç piksel
+// kayacağı (işaret yönü verir). Ne kadar zorlanırsa o kadar hızlı kayar.
+export function edgeScrollStep(overflow) {
+  if (overflow === 0) return 0;
+  const step = Math.min(EDGE_SCROLL_MAX_STEP, Math.ceil(Math.abs(overflow) / 3) + 2);
+  return Math.sign(overflow) * step;
+}
+
+// Öğenin sayfanın en üstüne uzaklığı. Dönüşümler (ör. sayfa geçiş animasyonu)
+// hesaba katılmaz, böylece ölçüm animasyon sırasında da doğrudur.
+export function documentTop(element) {
+  let top = 0;
+  for (let current = element; current; current = current.offsetParent) top += current.offsetTop;
+  return top;
+}
 
 function isPlaced(note) {
   return note.position_x != null && note.position_y != null;
