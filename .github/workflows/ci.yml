@@ -51,7 +51,9 @@ jobs:
       # paket kurulmaz. Yalnızca hazır derlenmiş paketler (wheel) kurulur, kurulumda
       # paketlerin kendi kodu çalışmaz. Dosyanın nasıl üretildiği başında yazar.
       - name: Paketleri kur
-        run: pip install --require-hashes --only-binary :all: -r requirements.lock
+        # ":all:" içindeki iki nokta YAML'ı bozmasın diye komut blok olarak yazılır.
+        run: |
+          pip install --require-hashes --only-binary :all: -r requirements.lock
 
       - name: Testleri çalıştır (kapsama raporuyla)
         run: python -m pytest --cov=app --cov-report=xml --cov-report=term
