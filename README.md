@@ -1,5 +1,9 @@
 # Beyaz Takım Notlar
 
+[![CI](https://github.com/buraksipahi058-svg/beyaztakim/actions/workflows/ci.yml/badge.svg)](https://github.com/buraksipahi058-svg/beyaztakim/actions/workflows/ci.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=buraksipahi058-svg_beyaztakim&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=buraksipahi058-svg_beyaztakim)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=buraksipahi058-svg_beyaztakim&metric=coverage)](https://sonarcloud.io/summary/new_code?id=buraksipahi058-svg_beyaztakim)
+
 Google Keep benzeri bir not alma uygulaması. Kullanıcılar hesap açıp giriş
 yapar; metin ve yapılacaklar listesi türünde notlar oluşturur, notları
 renklendirip sabitler, etiketler, arar, hatırlatıcı kurar, arşivler ve çöp
@@ -17,7 +21,7 @@ bölümünde, her fonksiyonun girdi/çıktısı [docs/fonksiyonlar.md](docs/fonk
 | Etiketler, etikete göre filtreleme ve arama | 3. kişi | Tamamlandı |
 | Altyapı, arşiv ve çöp kutusu | 4. kişi | Tamamlandı |
 | Liste notları, hatırlatıcılar, sabitleme ve renk | 5. kişi | Tamamlandı |
-| SonarCloud ve otomatik test (CI) bağlantısı | 4. kişi | Yapılacak |
+| SonarCloud ve otomatik test (CI) bağlantısı | 4. kişi | Tamamlandı |
 
 Uygulamayı açınca önce giriş ekranı gelir. Hesabınız yoksa **Kayıt ol**
 bağlantısından hesap açın; kayıttan sonra otomatik olarak giriş yapılır.
@@ -394,8 +398,26 @@ Testler her seferinde bellek içinde boş bir SQLite veritabanı kurar;
 | `seed_user` | Örnek verileri yükler, örnek kullanıcıyı döndürür |
 | `client` | Test veritabanına bağlı HTTP istemcisi (`client.get("/health")`) |
 
-SonarCloud bağlantısı henüz kurulmadı. Kurulduğunda bu `coverage.xml` raporunu
-kullanacak; ayarlar `sonar-project.properties` dosyasında.
+### Otomatik kontroller (CI) ve SonarCloud
+
+Her PR'da (açılınca ve her yeni commit'te) ve main'e her birleştirmede GitHub
+Actions şunları kendiliğinden çalıştırır ([.github/workflows/ci.yml](.github/workflows/ci.yml)):
+
+| İş | Ne yapar |
+|---|---|
+| **Backend testleri ve SonarCloud** | Python 3.11 ile `pytest`'i kapsama raporuyla çalıştırır, sonra kodu [SonarCloud](https://sonarcloud.io/summary/new_code?id=buraksipahi058-svg_beyaztakim)'da analiz eder (hatalar, güvenlik sorunları, kod kokuları, kapsama). |
+| **Frontend derlemesi** | `npm ci` ve `npm run build` ile frontend'in hatasız derlendiğini kontrol eder. |
+
+- Sonuçlar PR sayfasının altında görünür: yeşil tik geçti, kırmızı çarpı
+  bir şey bozuk demektir. Kırmızıysa **Details** bağlantısından hangi adımın
+  hata verdiğine bakın, düzeltip aynı branch'e yeniden push edin; kontroller
+  kendiliğinden yeniden çalışır.
+- SonarCloud, PR'a "Quality Gate" sonucunu ve bulduğu sorunları yorum olarak
+  ekler. Kapsama yalnızca backend için ölçülür (frontend'in otomatik testi
+  yok); frontend kodu yine de analiz edilir.
+- Ayarlar `sonar-project.properties` dosyasındadır. Analiz için repoda
+  `SONAR_TOKEN` adlı secret gerekir; SonarCloud'daki "Automatic Analysis"
+  kapalı olmalıdır (ikisi de kurulu).
 
 ## Sık karşılaşılan sorunlar
 
