@@ -58,7 +58,9 @@ dosyayı okumasını isteyin.
 
 9. **Sormadan yeni paket ekleme.** `requirements.txt` veya `package.json`'a
    paket eklemeden önce ekibe sor. Eklenen paketin sürümü sabit yazılır
-   (`paket==1.2.3`, npm'de `^` olmadan).
+   (`paket==1.2.3`, npm'de `^` olmadan). `requirements.txt` değişince
+   `backend/requirements.lock` yeniden üretilir (komut dosyanın başında
+   yazar); CI paketleri bu kilitli dosyadan hash kontrolüyle kurar.
 
 10. **Hataları anlamlı HTTP kodlarıyla döndür.** Servislerde
     `app/services/errors.py`'deki sınıfları kullan:
@@ -143,7 +145,7 @@ onayı olmadan main'e giremez (`.github/CODEOWNERS`).
   `backend/app/services/errors.py`
 - `backend/tests/conftest.py` ve altyapı testleri (`test_app_setup.py`,
   `test_config.py`, `test_dependencies.py`, `test_health.py`, `test_seed.py`)
-- `backend/requirements.txt`, `backend/pyproject.toml`
+- `backend/requirements.txt`, `backend/requirements.lock`, `backend/pyproject.toml`
 
 **Frontend**
 
