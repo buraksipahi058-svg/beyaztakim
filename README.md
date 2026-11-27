@@ -34,7 +34,8 @@ bağlantısından hesap açın; kayıttan sonra otomatik olarak giriş yapılır
 | Frontend | React 19, Vite 8, React Router 8, Framer Motion 14 |
 
 Paket sürümleri sabittir (`backend/requirements.txt`, `frontend/package.json`).
-Yeni paket eklemeden önce ekibe sorun.
+Yeni paket eklemeden önce ekibe sorun. `requirements.txt` değişirse
+`backend/requirements.lock` da yeniden üretilmelidir (komut dosyanın başında yazar).
 
 ## Ekip
 
@@ -418,6 +419,11 @@ Actions şunları kendiliğinden çalıştırır ([.github/workflows/ci.yml](.gi
 - Ayarlar `sonar-project.properties` dosyasındadır. Analiz için repoda
   `SONAR_TOKEN` adlı secret gerekir; SonarCloud'daki "Automatic Analysis"
   kapalı olmalıdır (ikisi de kurulu).
+- CI paketleri güvenli kurar: backend paketleri `backend/requirements.lock`'tan
+  sürüm ve hash kontrolüyle, frontend paketleri kurulum betikleri çalıştırılmadan
+  (`npm ci --ignore-scripts`) kurulur; SonarCloud eylemi commit SHA'sıyla
+  sabitlenmiştir. `requirements.txt` değişip `requirements.lock` yeniden
+  üretilmezse CI eski paket listesini kurar (yeni eklenen paket CI'da olmaz).
 
 ## Sık karşılaşılan sorunlar
 
