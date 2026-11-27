@@ -70,12 +70,17 @@ main'i güncelle → branch aç → kod yaz → commit → push → PR aç → i
 6. **PR'lar "Squash and merge" ile birleştirilir.** PR'daki tüm commit'ler
    main'de tek bir commit olur; mesajı PR'ın başlığıdır.
 7. **Yorumların hepsi çözülmeden PR birleştirilemez.**
+8. **Otomatik kontroller geçmeden PR birleştirilemez.** Her PR'da backend
+   testleri, frontend derlemesi ve SonarCloud kalite kontrolü (Quality Gate)
+   kendiliğinden çalışır; üçü de yeşil olmalıdır. Ayrıntı: README'deki
+   [Otomatik kontroller (CI) ve SonarCloud](../README.md#otomatik-kontroller-ci-ve-sonarcloud) bölümü.
 
 > **4. kişi için not:** GitHub, kod sahibinin kendi PR'ını onaylamasına izin
 > vermez. Bu yüzden 4. kişinin ortak dosyalara dokunan kendi PR'ları, bir
 > arkadaş onayladıktan sonra yönetici olarak **Merge without waiting for
 > requirements to be met** kutusu işaretlenerek birleştirilir. Bu kutu
-> yalnızca bu durum için kullanılır.
+> yalnızca bu durum için kullanılır. Kutu otomatik kontrolleri de atladığı
+> için işaretlemeden önce üç kontrolün yeşil olduğuna bakılır.
 
 ### Branch adı
 
@@ -294,9 +299,16 @@ git push
 5. Sağdaki **Reviewers**'a tıkla, inceleyecek bir arkadaşını seç.
 6. **Create pull request**'e bas.
 
+PR açılınca otomatik kontroller kendiliğinden çalışır ve birkaç dakika sürer.
+Sonuçlar PR sayfasının altında görünür: sarı nokta sürüyor, yeşil tik geçti,
+kırmızı çarpı bir şey bozuk demektir. SonarCloud ayrıca PR'a sonucunu yorum
+olarak yazar.
+
 ### Adım 8: Düzeltme istenirse
 
-Arkadaşın bir şeyin değişmesini isterse:
+Arkadaşın bir şeyin değişmesini isterse ya da otomatik kontrollerden biri
+kırmızı çıkarsa (hangi adımın hata verdiğini görmek için kontrolün yanındaki
+**Details**'e bas):
 
 1. Aynı branch'te kal (yeni branch açma).
 2. Düzeltmeyi yap, commit at, `git push` yap.
@@ -316,6 +328,8 @@ Buton griyse nedeni şunlardan biridir:
 - Henüz onay yok.
 - Çözülmemiş yorum var.
 - Ortak dosyaya dokunmuşsun ve 4. kişinin onayı bekleniyor.
+- Otomatik kontrollerden biri henüz bitmedi (sarı nokta) ya da hata verdi
+  (kırmızı çarpı; bkz. [Adım 8](#adım-8-düzeltme-istenirse)).
 - main ile çakışma var (bkz. [Çakışma çözmek](#7-çakışma-conflict-çözmek)).
 
 ### Adım 10: main'e dön ve güncelle

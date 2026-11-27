@@ -187,6 +187,9 @@ Tabloların ayrıntısı: [docs/veri-modeli.md](docs/veri-modeli.md).
   branch'inde yapılır ve Pull Request (PR) ile birleştirilir.
 - **Her PR'ı en az 1 arkadaş onaylar.** Ortak dosyalara dokunan PR'ı ayrıca
   4. kişi onaylar (GitHub bunu otomatik ister).
+- **Otomatik kontroller geçmeden PR birleştirilemez.** Backend testleri,
+  frontend derlemesi ve SonarCloud kalite kontrolü her PR'da kendiliğinden
+  çalışır (bkz. [Otomatik kontroller (CI) ve SonarCloud](#otomatik-kontroller-ci-ve-sonarcloud)).
 - **Herkes sadece kendi dosyalarında çalışır.** Kimin hangi dosyası olduğu ve
   ortak dosyaların listesi: [AGENTS.md](AGENTS.md#dosya-sahipliği).
 - **Yazılan her fonksiyon** (backend ve frontend) girdisi, çıktısı ve hata
@@ -413,6 +416,8 @@ Actions şunları kendiliğinden çalıştırır ([.github/workflows/ci.yml](.gi
   bir şey bozuk demektir. Kırmızıysa **Details** bağlantısından hangi adımın
   hata verdiğine bakın, düzeltip aynı branch'e yeniden push edin; kontroller
   kendiliğinden yeniden çalışır.
+- Üç kontrol (iki iş ve SonarCloud'un Quality Gate sonucu) main için
+  zorunludur: biri geçmeden PR birleştirilemez.
 - SonarCloud, PR'a "Quality Gate" sonucunu ve bulduğu sorunları yorum olarak
   ekler. Kapsama yalnızca backend için ölçülür (frontend'in otomatik testi
   yok); frontend kodu yine de analiz edilir.
